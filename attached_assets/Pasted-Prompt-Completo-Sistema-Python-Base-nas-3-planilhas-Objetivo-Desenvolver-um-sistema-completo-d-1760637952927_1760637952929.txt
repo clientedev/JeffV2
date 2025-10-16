@@ -1,0 +1,252 @@
+Prompt Completo – Sistema Python (Base nas 3 planilhas)
+
+Objetivo:
+Desenvolver um sistema completo de Gestão Operacional, Comercial e Administrativa, unificando as planilhas:
+
+CRONOGRAMA 2.0
+
+Controle Geral 3.0
+
+Controle Geral_Considerações
+
+O sistema deve permitir: cadastro, atualização, BI em tempo real, alertas de vencimentos e relatórios automáticos.
+
+🔹 1. Estrutura Geral do Sistema
+
+Backend em Python (FastAPI) ou Flask
+
+Banco de dados PostgreSQL (ou Supabase se quiser integração online)
+
+Frontend simples em HTML/CSS/JS (Bootstrap 5 ou Tailwind)
+
+BI integrado com Plotly Dash ou Metabase embutido
+
+Sistema de login e autenticação (usuário, senha, cargo)
+
+Dashboard inicial com visão geral dos projetos, contratos, prazos e faturamento
+
+🔹 2. Módulos Principais
+🧾 Módulo de Prospecção (baseado em “Controle Geral 3.0”)
+
+Campos: CNPJ, EMPRESA, ER, CONSULTOR, STATUS, DATA_CONTATO, SEGMENTO, SOLUÇÃO, DATA_PROPOSTA, VALOR_PROPOSTA, DATA_FECHAMENTO, RESULTADO.
+
+Funções:
+
+CRUD completo de prospecções
+
+Upload de planilhas CSV antigas
+
+Filtro por status (Em andamento, Fechado, Perdido)
+
+Linha do tempo por data de contato → fechamento
+
+BI:
+
+Gráfico de taxa de conversão
+
+Volume de propostas por consultor e mês
+
+🧩 Módulo de Cronograma (baseado em “CRONOGRAMA 2.0”)
+
+Campos: Nº PROPOSTA, EMPRESA, CNPJ, SOLUÇÃO, CONSULTOR, DATA_INÍCIO, DATA_TÉRMINO, HORAS_PREVISTAS, HORAS_EXECUTADAS, STATUS, OBSERVAÇÕES.
+
+Funções:
+
+Gerar cronograma automático por projeto
+
+Atualizar andamento (checklist e percentual)
+
+Visualizar tarefas a vencer (até 7 dias) e atrasadas
+
+Integração com aba “FERIADOS” para cálculo de prazos úteis
+
+BI:
+
+Gantt chart de cronogramas
+
+Horas previstas vs executadas por consultor
+
+% de produtividade por mês
+
+💼 Módulo de Contratos e Faturamento (baseado em “Controle Geral_Considerações”)
+
+Campos: Nº PROPOSTA, CNPJ, EMPRESA, DATA_ASSINATURA, DATA_VENCIMENTO, VALOR_CONTRATO, STATUS_PAGAMENTO, OBSERVAÇÃO.
+
+Funções:
+
+Cadastro e atualização de contratos
+
+Controle de vencimentos (alerta por e-mail ou painel vermelho)
+
+Histórico de faturamento por cliente
+
+BI:
+
+Total faturado por mês e consultor
+
+Contratos ativos, vencidos e pendentes
+
+Projeção de receita futura
+
+🧠 Módulo de BI (Dashboards)
+
+Indicadores principais:
+
+Total de projetos ativos
+
+Projetos concluídos no mês
+
+Total de horas executadas
+
+Taxa de fechamento de propostas
+
+Receita acumulada
+
+Dashboards:
+
+“Visão Geral” (cards + gráficos)
+
+“Consultores” (ranking de produtividade)
+
+“Empresas” (mapa e ranking por valor)
+
+“Faturamento” (gráfico de barras mensais)
+
+“Cronogramas” (gantt de execução)
+
+👥 Módulo de Usuários
+
+Campos: nome, email, senha, função (Administrador, Consultor, Financeiro)
+
+Controle de permissões:
+
+Consultor → vê apenas seus projetos
+
+Financeiro → vê apenas contratos e BI financeiro
+
+Admin → acesso total
+
+🔹 3. Estrutura de Banco de Dados (modelo simplificado)
+-- Tabela de empresas
+CREATE TABLE empresas (
+  id SERIAL PRIMARY KEY,
+  cnpj VARCHAR(18) UNIQUE NOT NULL,
+  nome VARCHAR(255),
+  segmento VARCHAR(255),
+  regiao VARCHAR(50)
+);
+
+-- Tabela de consultores
+CREATE TABLE consultores (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(255),
+  email VARCHAR(255),
+  cargo VARCHAR(100)
+);
+
+-- Tabela de propostas/projetos
+CREATE TABLE propostas (
+  id SERIAL PRIMARY KEY,
+  numero_proposta VARCHAR(50),
+  empresa_id INT REFERENCES empresas(id),
+  consultor_id INT REFERENCES consultores(id),
+  solucao VARCHAR(255),
+  data_proposta DATE,
+  valor_proposta NUMERIC(12,2),
+  status VARCHAR(50)
+);
+
+-- Cronograma de execução
+CREATE TABLE cronogramas (
+  id SERIAL PRIMARY KEY,
+  proposta_id INT REFERENCES propostas(id),
+  data_inicio DATE,
+  data_termino DATE,
+  horas_previstas NUMERIC(6,2),
+  horas_executadas NUMERIC(6,2),
+  status VARCHAR(50),
+  observacoes TEXT
+);
+
+-- Contratos e faturamento
+CREATE TABLE contratos (
+  id SERIAL PRIMARY KEY,
+  proposta_id INT REFERENCES propostas(id),
+  data_assinatura DATE,
+  data_vencimento DATE,
+  valor NUMERIC(12,2),
+  status_pagamento VARCHAR(50),
+  observacao TEXT
+);
+
+🔹 4. Operações principais
+
+CRUD completo (Create, Read, Update, Delete)
+
+Importação automática das planilhas antigas (CSV ou XLSX)
+
+Alertas automáticos:
+
+Projetos a vencer
+
+Contratos com vencimento próximo
+
+Propostas paradas há mais de X dias
+
+Exportação rápida para Excel/PDF
+
+Dashboard BI dinâmico
+
+🔹 5. Funcionalidades Inteligentes (opcionais)
+
+API REST para integração futura com apps móveis
+
+Geração de relatórios automáticos em PDF por e-mail semanal
+
+Chatbot interno (com GPT API) para buscar informações tipo:
+
+“Quais contratos vencem nesta semana?”
+
+Registro de logs de atividade por usuário
+
+🔹 6. Estrutura de Pastas Recomendada
+/app
+ ├── main.py
+ ├── models/
+ │   ├── empresa.py
+ │   ├── consultor.py
+ │   ├── proposta.py
+ │   ├── cronograma.py
+ │   └── contrato.py
+ ├── routes/
+ │   ├── empresas.py
+ │   ├── propostas.py
+ │   ├── cronogramas.py
+ │   └── contratos.py
+ ├── templates/
+ │   ├── dashboard.html
+ │   ├── cronograma.html
+ │   ├── propostas.html
+ │   └── contratos.html
+ ├── static/
+ │   ├── css/
+ │   └── js/
+ └── database.py
+
+🔹 7. BI e Monitoramento
+
+Cada dashboard deve mostrar:
+
+🔸 Projetos em andamento
+
+🔸 Horas executadas / previstas
+
+🔸 Contratos a vencer (alerta vermelho)
+
+🔸 Taxa de conversão comercial
+
+🔸 Receita mensal acumulada
+
+Gráficos recomendados:
+
+Barras, pizza, linha do tempo, ranking horizontal, indicadores numéricos
