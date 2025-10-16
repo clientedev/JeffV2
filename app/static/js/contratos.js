@@ -13,6 +13,7 @@ function getHeaders() {
 
 function logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/';
 }
 
@@ -28,21 +29,46 @@ async function carregarContratos() {
         }
         
         const contratos = await response.json();
-        const tbody = document.getElementById('tabelaContratos');
+        const tbody = document.getElementById('contratosTable');
         
-        tbody.innerHTML = contratos.map(c => `
-            <tr>
-                <td>${c.numero_contrato}</td>
-                <td>ID: ${c.proposta_id}</td>
-                <td>${c.data_assinatura || '-'}</td>
-                <td>${c.data_vencimento || '-'}</td>
-                <td>R$ ${(c.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                <td><span class="badge bg-${c.status_pagamento === 'Pago' ? 'success' : c.status_pagamento === 'Vencido' ? 'danger' : 'warning'}">${c.status_pagamento}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="deletarContrato(${c.id})">Excluir</button>
-                </td>
-            </tr>
-        `).join('');
+        if (contratos.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-file-contract"></i></div>
+                        <div class="empty-state-title">Nenhum contrato encontrado</div>
+                        <div class="empty-state-description">Comece adicionando um novo contrato</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = contratos.map(c => {
+            let statusClass = 'badge-warning';
+            if (c.status_pagamento === 'Pago') statusClass = 'badge-success';
+            else if (c.status_pagamento === 'Vencido') statusClass = 'badge-danger';
+            else if (c.status_pagamento === 'Cancelado') statusClass = 'badge-secondary';
+            
+            return `
+                <tr>
+                    <td>${c.numero_contrato || '-'}</td>
+                    <td>${c.proposta ? (c.proposta.numero_proposta || 'ID: ' + c.proposta_id) : 'ID: ' + c.proposta_id}</td>
+                    <td>${c.data_assinatura ? new Date(c.data_assinatura).toLocaleDateString('pt-BR') : '-'}</td>
+                    <td>${c.data_vencimento ? new Date(c.data_vencimento).toLocaleDateString('pt-BR') : '-'}</td>
+                    <td>R$ ${(c.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td><span class="badge ${statusClass}">${c.status_pagamento || 'Pendente'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editarContrato(${c.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletarContrato(${c.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
         
         verificarContratosVencidos();
     } catch (error) {
@@ -56,51 +82,27 @@ async function verificarContratosVencidos() {
             headers: getHeaders()
         });
         
-        const alertas = await response.json();
-        const alertDiv = document.getElementById('alertasContratosVencidos');
-        
-        if (alertas.length > 0) {
-            alertDiv.innerHTML = `<strong>Atenção!</strong> ${alertas.length} contrato(s) com vencimento próximo ou vencido.`;
-            alertDiv.style.display = 'block';
-        } else {
-            alertDiv.style.display = 'none';
+        if (response.ok) {
+            const alertas = await response.json();
+            const alertDiv = document.getElementById('alertasContratosVencidos');
+            
+            if (alertas.length > 0) {
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Atenção!</strong> ${alertas.length} contrato(s) com vencimento próximo ou vencido.
+                `;
+                alertDiv.style.display = 'block';
+            } else {
+                alertDiv.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Erro ao verificar contratos:', error);
     }
 }
 
-async function salvarContrato() {
-    const contrato = {
-        numero_contrato: document.getElementById('numero_contrato').value,
-        proposta_id: parseInt(document.getElementById('proposta_id').value),
-        data_assinatura: document.getElementById('data_assinatura').value || null,
-        data_vencimento: document.getElementById('data_vencimento').value || null,
-        valor: parseFloat(document.getElementById('valor').value) || null,
-        status_pagamento: document.getElementById('status_pagamento').value
-    };
-    
-    try {
-        const response = await fetch(`${API_URL}/contratos`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(contrato)
-        });
-        
-        if (response.ok) {
-            bootstrap.Modal.getInstance(document.getElementById('modalContrato')).hide();
-            carregarContratos();
-            document.getElementById('formContrato').reset();
-        } else {
-            alert('Erro ao salvar contrato');
-        }
-    } catch (error) {
-        console.error('Erro ao salvar contrato:', error);
-    }
-}
-
 async function deletarContrato(id) {
-    if (!confirm('Deseja realmente excluir este contrato?')) return;
+    if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
     
     try {
         const response = await fetch(`${API_URL}/contratos/${id}`, {
@@ -114,12 +116,14 @@ async function deletarContrato(id) {
             alert('Erro ao excluir contrato');
         }
     } catch (error) {
-        console.error('Erro ao excluir contrato:', error);
+        console.error('Erro:', error);
+        alert('Erro ao excluir contrato');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!getToken()) {
+    const token = getToken();
+    if (!token) {
         window.location.href = '/';
         return;
     }
