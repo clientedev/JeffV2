@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
+from datetime import date, timedelta, datetime
 
 from app.database import get_db
 from app.models.models import Proposta, Usuario
@@ -31,6 +33,8 @@ async def listar_propostas(
     limit: int = 100,
     status_filter: Optional[str] = None,
     consultor_id: Optional[int] = None,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -45,8 +49,54 @@ async def listar_propostas(
     if consultor_id:
         query = query.filter(Proposta.consultor_id == consultor_id)
     
+    if data_inicio:
+        query = query.filter(Proposta.data_proposta >= data_inicio)
+    
+    if data_fim:
+        query = query.filter(Proposta.data_proposta <= data_fim)
+    
     propostas = query.offset(skip).limit(limit).all()
     return propostas
+
+@router.get("/estatisticas")
+async def obter_estatisticas_propostas(
+    consultor_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(Proposta)
+    
+    if current_user.funcao == "Consultor" and current_user.consultor_id:
+        query = query.filter(Proposta.consultor_id == current_user.consultor_id)
+    elif consultor_id:
+        query = query.filter(Proposta.consultor_id == consultor_id)
+    
+    total_propostas = query.count()
+    propostas_fechadas = query.filter(Proposta.status == "Fechado").count()
+    propostas_em_andamento = query.filter(Proposta.status == "Em andamento").count()
+    propostas_perdidas = query.filter(Proposta.status == "Perdido").count()
+    
+    taxa_conversao = (propostas_fechadas / total_propostas * 100) if total_propostas > 0 else 0
+    
+    propostas_paradas = query.filter(
+        Proposta.status == "Em andamento",
+        Proposta.atualizado_em < datetime.now() - timedelta(days=30)
+    ).count()
+    
+    valor_total = db.query(func.sum(Proposta.valor_proposta)).filter(
+        Proposta.id.in_([p.id for p in query.all()]),
+        Proposta.status == "Fechado"
+    ).scalar() or 0
+    
+    return {
+        "total_propostas": total_propostas,
+        "propostas_fechadas": propostas_fechadas,
+        "propostas_em_andamento": propostas_em_andamento,
+        "propostas_perdidas": propostas_perdidas,
+        "propostas_paradas": propostas_paradas,
+        "taxa_conversao": round(taxa_conversao, 2),
+        "valor_total_fechado": float(valor_total)
+    }
 
 @router.get("/{proposta_id}", response_model=PropostaResponse)
 async def obter_proposta(

@@ -78,9 +78,54 @@ async def atualizar_cronograma(
     for key, value in cronograma_data.model_dump(exclude_unset=True).items():
         setattr(cronograma, key, value)
     
+    _atualizar_status_cronograma(cronograma, db)
+    
     db.commit()
     db.refresh(cronograma)
     return cronograma
+
+@router.post("/{cronograma_id}/calcular-progresso")
+async def calcular_progresso_cronograma(
+    cronograma_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    cronograma = db.query(Cronograma).filter(Cronograma.id == cronograma_id).first()
+    if not cronograma:
+        raise HTTPException(status_code=404, detail="Cronograma não encontrado")
+    
+    tarefas = db.query(Tarefa).filter(Tarefa.cronograma_id == cronograma_id).all()
+    
+    if tarefas:
+        total_tarefas = len(tarefas)
+        tarefas_concluidas = sum(1 for t in tarefas if t.concluida)
+        percentual = (tarefas_concluidas / total_tarefas) * 100
+        cronograma.percentual_conclusao = round(percentual, 2)
+    
+    _atualizar_status_cronograma(cronograma, db)
+    
+    db.commit()
+    db.refresh(cronograma)
+    
+    return {
+        "cronograma_id": cronograma.id,
+        "percentual_conclusao": float(cronograma.percentual_conclusao),
+        "status": cronograma.status,
+        "total_tarefas": len(tarefas) if tarefas else 0,
+        "tarefas_concluidas": sum(1 for t in tarefas if t.concluida) if tarefas else 0
+    }
+
+def _atualizar_status_cronograma(cronograma: Cronograma, db: Session):
+    hoje = date.today()
+    
+    if cronograma.percentual_conclusao >= 100:
+        cronograma.status = "Concluído"
+    elif cronograma.data_termino and cronograma.data_termino < hoje and cronograma.percentual_conclusao < 100:
+        cronograma.status = "Atrasado"
+    elif cronograma.data_inicio and cronograma.data_inicio <= hoje:
+        cronograma.status = "Em andamento"
+    else:
+        cronograma.status = "Não iniciado"
 
 @router.delete("/{cronograma_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deletar_cronograma(

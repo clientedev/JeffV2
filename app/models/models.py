@@ -6,8 +6,8 @@ import enum
 
 class FuncaoUsuario(str, enum.Enum):
     ADMIN = "Admin"
-    GESTOR = "Gestor"
     CONSULTOR = "Consultor"
+    FINANCEIRO = "Financeiro"
 
 class Usuario(Base):
     __tablename__ = "usuarios"

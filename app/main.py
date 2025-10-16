@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas
 
 app = FastAPI(title="Sistema de Gestão Operacional", version="1.0.0")
 
@@ -34,6 +34,7 @@ app.include_router(bi.router, prefix="/api/bi", tags=["Business Intelligence"])
 app.include_router(importacao.router, prefix="/api/importacao", tags=["Importação"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
 app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"])
+app.include_router(alertas.router, prefix="/api/alertas", tags=["Alertas"])
 
 @app.on_event("startup")
 async def startup_event():

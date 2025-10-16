@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func
+from typing import List, Optional
 from datetime import date, timedelta
 
 from app.database import get_db
@@ -30,11 +31,73 @@ async def criar_contrato(
 async def listar_contratos(
     skip: int = 0, 
     limit: int = 100,
+    status_pagamento: Optional[str] = None,
+    data_inicio: Optional[date] = None,
+    data_fim: Optional[date] = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    contratos = db.query(Contrato).offset(skip).limit(limit).all()
+    query = db.query(Contrato)
+    
+    if status_pagamento:
+        query = query.filter(Contrato.status_pagamento == status_pagamento)
+    
+    if data_inicio:
+        query = query.filter(Contrato.data_vencimento >= data_inicio)
+    
+    if data_fim:
+        query = query.filter(Contrato.data_vencimento <= data_fim)
+    
+    contratos = query.offset(skip).limit(limit).all()
     return contratos
+
+@router.get("/faturamento")
+async def obter_faturamento(
+    ano: Optional[int] = None,
+    mes: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(Contrato)
+    
+    if ano and mes:
+        query = query.filter(
+            func.extract('year', Contrato.data_assinatura) == ano,
+            func.extract('month', Contrato.data_assinatura) == mes
+        )
+    elif ano:
+        query = query.filter(func.extract('year', Contrato.data_assinatura) == ano)
+    
+    total_contratos = query.count()
+    contratos_pagos = query.filter(Contrato.status_pagamento == "Pago").count()
+    contratos_pendentes = query.filter(Contrato.status_pagamento == "Pendente").count()
+    contratos_vencidos = query.filter(Contrato.status_pagamento == "Vencido").count()
+    
+    valor_total = db.query(func.sum(Contrato.valor)).filter(
+        Contrato.id.in_([c.id for c in query.all()])
+    ).scalar() or 0
+    
+    valor_pago = db.query(func.sum(Contrato.valor)).filter(
+        Contrato.id.in_([c.id for c in query.all()]),
+        Contrato.status_pagamento == "Pago"
+    ).scalar() or 0
+    
+    valor_pendente = db.query(func.sum(Contrato.valor)).filter(
+        Contrato.id.in_([c.id for c in query.all()]),
+        Contrato.status_pagamento.in_(["Pendente", "Vencido"])
+    ).scalar() or 0
+    
+    return {
+        "periodo": f"{ano}/{mes:02d}" if ano and mes else str(ano) if ano else "Total",
+        "total_contratos": total_contratos,
+        "contratos_pagos": contratos_pagos,
+        "contratos_pendentes": contratos_pendentes,
+        "contratos_vencidos": contratos_vencidos,
+        "valor_total": float(valor_total),
+        "valor_pago": float(valor_pago),
+        "valor_pendente": float(valor_pendente),
+        "taxa_pagamento": round((contratos_pagos / total_contratos * 100) if total_contratos > 0 else 0, 2)
+    }
 
 @router.get("/alertas", response_model=List[ContratoResponse])
 async def contratos_vencendo(
