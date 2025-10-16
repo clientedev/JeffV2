@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios
 
 app = FastAPI(title="Sistema de Gestão Operacional", version="1.0.0")
 
@@ -33,6 +33,7 @@ app.include_router(contratos.router, prefix="/api/contratos", tags=["Contratos"]
 app.include_router(bi.router, prefix="/api/bi", tags=["Business Intelligence"])
 app.include_router(importacao.router, prefix="/api/importacao", tags=["Importação"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -80,6 +81,14 @@ async def contratos_page(request: Request):
 @app.get("/importacao", response_class=HTMLResponse)
 async def importacao_page(request: Request):
     return templates.TemplateResponse("importacao.html", {"request": request})
+
+@app.get("/usuarios", response_class=HTMLResponse)
+async def usuarios_page(request: Request):
+    return templates.TemplateResponse("usuarios.html", {"request": request})
+
+@app.get("/relatorios", response_class=HTMLResponse)
+async def relatorios_page(request: Request):
+    return templates.TemplateResponse("relatorios.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

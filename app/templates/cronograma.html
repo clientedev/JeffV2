@@ -1,112 +1,50 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronogramas - Sistema de Gestão</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard">Sistema de Gestão</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/prospeccao">Prospecção</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/cronograma">Cronogramas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/contratos">Contratos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/importacao">Importação</a></li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <button class="btn btn-outline-light btn-sm" onclick="logout()">Sair</button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Gestão de Cronogramas</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCronograma">Novo Cronograma</button>
-        </div>
+{% block title %}Cronogramas - Sistema de Gestão{% endblock %}
+{% block page_title %}Cronogramas{% endblock %}
 
-        <div class="alert alert-warning" id="alertasVencimento"></div>
+{% block top_actions %}
+<button class="btn btn-primary" onclick="abrirModalNovoCronograma()">
+    <i class="fas fa-plus"></i>
+    Novo Cronograma
+</button>
+{% endblock %}
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Proposta</th>
-                                <th>Início</th>
-                                <th>Término</th>
-                                <th>Horas Previstas</th>
-                                <th>Horas Executadas</th>
-                                <th>Conclusão</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaCronogramas"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+{% block content %}
+<div class="alert alert-warning" id="alertasVencimento" style="display: none;"></div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Proposta</th>
+                    <th>Início</th>
+                    <th>Término</th>
+                    <th>Horas Previstas</th>
+                    <th>Horas Executadas</th>
+                    <th>% Conclusão</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="cronogramasTable">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+</div>
+{% endblock %}
 
-    <div class="modal fade" id="modalCronograma" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Cronograma</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formCronograma">
-                        <div class="mb-3">
-                            <label class="form-label">Proposta (ID)</label>
-                            <input type="number" class="form-control" id="proposta_id" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Data Início</label>
-                            <input type="date" class="form-control" id="data_inicio">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Data Término</label>
-                            <input type="date" class="form-control" id="data_termino">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Horas Previstas</label>
-                            <input type="number" step="0.1" class="form-control" id="horas_previstas">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" id="status">
-                                <option value="Não iniciado">Não iniciado</option>
-                                <option value="Em andamento">Em andamento</option>
-                                <option value="Concluído">Concluído</option>
-                                <option value="Atrasado">Atrasado</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" onclick="salvarCronograma()">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/static/js/cronograma.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% block extra_js %}
+<script src="/static/js/cronograma.js"></script>
+<script>
+function abrirModalNovoCronograma() {
+    alert('Funcionalidade em desenvolvimento');
+}
+</script>
+{% endblock %}

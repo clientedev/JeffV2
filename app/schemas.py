@@ -12,6 +12,12 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     senha: str
 
+class UsuarioUpdate(BaseModel):
+    nome: Optional[str] = None
+    email: Optional[EmailStr] = None
+    funcao: Optional[str] = None
+    ativo: Optional[bool] = None
+
 class UsuarioResponse(UsuarioBase):
     id: int
     ativo: bool

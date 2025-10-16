@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Sistema de Gestão{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+    <div class="card">
+        <h3 class="card-title">
+            <i class="fas fa-file-pdf" style="color: var(--accent-danger);"></i>
+            Relatórios em PDF
+        </h3>
+        <p style="color: var(--text-secondary); margin: 16px 0;">Gere relatórios detalhados em formato PDF</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn btn-secondary" onclick="gerarPDF('propostas')">
+                <i class="fas fa-chart-line"></i>
+                Relatório de Propostas
+            </button>
+            <button class="btn btn-secondary" onclick="gerarPDF('contratos')">
+                <i class="fas fa-file-contract"></i>
+                Relatório de Contratos
+            </button>
+            <button class="btn btn-secondary" onclick="gerarPDF('cronogramas')">
+                <i class="fas fa-calendar-alt"></i>
+                Relatório de Cronogramas
+            </button>
+            <button class="btn btn-secondary" onclick="gerarPDF('geral')">
+                <i class="fas fa-chart-bar"></i>
+                Relatório Geral
+            </button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3 class="card-title">
+            <i class="fas fa-file-excel" style="color: var(--accent-success);"></i>
+            Exportar para Excel
+        </h3>
+        <p style="color: var(--text-secondary); margin: 16px 0;">Exporte dados para planilhas Excel</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn btn-secondary" onclick="exportarExcel('propostas')">
+                <i class="fas fa-chart-line"></i>
+                Exportar Propostas
+            </button>
+            <button class="btn btn-secondary" onclick="exportarExcel('contratos')">
+                <i class="fas fa-file-contract"></i>
+                Exportar Contratos
+            </button>
+            <button class="btn btn-secondary" onclick="exportarExcel('cronogramas')">
+                <i class="fas fa-calendar-alt"></i>
+                Exportar Cronogramas
+            </button>
+            <button class="btn btn-secondary" onclick="exportarExcel('completo')">
+                <i class="fas fa-database"></i>
+                Exportação Completa
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-filter"></i>
+            Filtros de Relatório
+        </h3>
+    </div>
+    <div style="padding: 24px;">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Data Inicial</label>
+                <input type="date" class="form-control" id="dataInicial">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data Final</label>
+                <input type="date" class="form-control" id="dataFinal">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filtroStatus">
+                    <option value="">Todos</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Fechado">Fechado</option>
+                    <option value="Perdido">Perdido</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="statusRelatorio" style="display: none; margin-top: 24px;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function gerarPDF(tipo) {
+    const statusDiv = document.getElementById('statusRelatorio');
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = `
+        <div class="alert alert-info">
+            <span class="loading-spinner"></span>
+            Gerando relatório PDF de ${tipo}...
+        </div>
+    `;
+    
+    const dataInicial = document.getElementById('dataInicial').value;
+    const dataFinal = document.getElementById('dataFinal').value;
+    const status = document.getElementById('filtroStatus').value;
+    
+    const params = new URLSearchParams();
+    if (dataInicial) params.append('data_inicial', dataInicial);
+    if (dataFinal) params.append('data_final', dataFinal);
+    if (status) params.append('status', status);
+    
+    try {
+        const response = await fetchAPI(`/api/relatorios/pdf/${tipo}?${params.toString()}`);
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_${tipo}_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    Relatório PDF gerado com sucesso!
+                </div>
+            `;
+        } else {
+            throw new Error('Erro ao gerar relatório');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Erro ao gerar relatório. Tente novamente.
+            </div>
+        `;
+    }
+}
+
+async function exportarExcel(tipo) {
+    const statusDiv = document.getElementById('statusRelatorio');
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = `
+        <div class="alert alert-info">
+            <span class="loading-spinner"></span>
+            Exportando dados para Excel...
+        </div>
+    `;
+    
+    const dataInicial = document.getElementById('dataInicial').value;
+    const dataFinal = document.getElementById('dataFinal').value;
+    const status = document.getElementById('filtroStatus').value;
+    
+    const params = new URLSearchParams();
+    if (dataInicial) params.append('data_inicial', dataInicial);
+    if (dataFinal) params.append('data_final', dataFinal);
+    if (status) params.append('status', status);
+    
+    try {
+        const response = await fetchAPI(`/api/relatorios/excel/${tipo}?${params.toString()}`);
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `exportacao_${tipo}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    Dados exportados com sucesso!
+                </div>
+            `;
+        } else {
+            throw new Error('Erro ao exportar');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Erro ao exportar dados. Tente novamente.
+            </div>
+        `;
+    }
+}
+
+const hoje = new Date();
+const trintaDiasAtras = new Date(hoje);
+trintaDiasAtras.setDate(hoje.getDate() - 30);
+
+document.getElementById('dataInicial').value = trintaDiasAtras.toISOString().split('T')[0];
+document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
+</script>
+{% endblock %}

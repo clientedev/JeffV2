@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from app.database import get_db
 from app.models.models import Usuario
-from app.schemas import UsuarioCreate, UsuarioResponse, LoginRequest, Token
+from app.schemas import UsuarioCreate, UsuarioUpdate, UsuarioResponse, LoginRequest, Token
 from app.auth import (
     verify_password, 
     get_password_hash, 
@@ -38,7 +38,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         data={"sub": user.email, "funcao": user.funcao}, 
         expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "nome": user.nome,
+            "email": user.email,
+            "funcao": user.funcao
+        }
+    }
 
 @router.post("/usuarios", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 async def criar_usuario(
@@ -72,3 +81,47 @@ async def listar_usuarios(
 ):
     usuarios = db.query(Usuario).all()
     return usuarios
+
+@router.put("/usuarios/{usuario_id}", response_model=UsuarioResponse)
+async def atualizar_usuario(
+    usuario_id: int,
+    usuario_data: UsuarioUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_role("Admin"))
+):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    if usuario_data.nome is not None:
+        usuario.nome = usuario_data.nome
+    if usuario_data.email is not None:
+        existing = db.query(Usuario).filter(Usuario.email == usuario_data.email, Usuario.id != usuario_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email já cadastrado")
+        usuario.email = usuario_data.email
+    if usuario_data.funcao is not None:
+        usuario.funcao = usuario_data.funcao
+    if usuario_data.ativo is not None:
+        usuario.ativo = usuario_data.ativo
+    
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+@router.delete("/usuarios/{usuario_id}")
+async def deletar_usuario(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_role("Admin"))
+):
+    if usuario_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Não é possível deletar seu próprio usuário")
+    
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    db.delete(usuario)
+    db.commit()
+    return {"message": "Usuário deletado com sucesso"}

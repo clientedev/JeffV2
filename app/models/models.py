@@ -2,6 +2,12 @@ from sqlalchemy import Column, Integer, String, Date, Numeric, ForeignKey, Text,
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
+import enum
+
+class FuncaoUsuario(str, enum.Enum):
+    ADMIN = "Admin"
+    GESTOR = "Gestor"
+    CONSULTOR = "Consultor"
 
 class Usuario(Base):
     __tablename__ = "usuarios"
