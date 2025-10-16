@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Alertas - Sistema de relacionamento com a industria{% endblock %}
+{% block page_title %}Alertas do Sistema{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-danger);">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="totalAlertas">-</div>
+            <div class="stat-label">Total de Alertas</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--accent-warning);">
+            <i class="fas fa-file-contract"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="contratosVencendo">-</div>
+            <div class="stat-label">Contratos Vencendo</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-secondary);">
+            <i class="fas fa-calendar-times"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="cronogramasAtrasados">-</div>
+            <div class="stat-label">Cronogramas Atrasados</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(6, 182, 212, 0.1); color: var(--accent-info);">
+            <i class="fas fa-pause-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value" id="propostasParadas">-</div>
+            <div class="stat-label">Propostas Paradas</div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-bell"></i>
+            Contratos a Vencer (7 dias)
+        </h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Contrato</th>
+                    <th>Empresa</th>
+                    <th>Valor</th>
+                    <th>Vencimento</th>
+                    <th>Dias Restantes</th>
+                </tr>
+            </thead>
+            <tbody id="contratosTable">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-clock"></i>
+            Cronogramas com Prazo Próximo
+        </h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Proposta</th>
+                    <th>Empresa</th>
+                    <th>Data Término</th>
+                    <th>% Conclusão</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody id="cronogramasTable">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-stop-circle"></i>
+            Propostas Paradas (+30 dias)
+        </h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Proposta</th>
+                    <th>Empresa</th>
+                    <th>Consultor</th>
+                    <th>Data Proposta</th>
+                    <th>Dias Parada</th>
+                </tr>
+            </thead>
+            <tbody id="propostasTable">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function carregarAlertas() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/alertas/todos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const alertas = await response.json();
+            
+            document.getElementById('totalAlertas').textContent = 
+                (alertas.contratos_vencendo?.length || 0) + 
+                (alertas.cronogramas_proximos?.length || 0) + 
+                (alertas.propostas_paradas?.length || 0);
+            
+            document.getElementById('contratosVencendo').textContent = alertas.contratos_vencendo?.length || 0;
+            document.getElementById('cronogramasAtrasados').textContent = alertas.cronogramas_proximos?.length || 0;
+            document.getElementById('propostasParadas').textContent = alertas.propostas_paradas?.length || 0;
+            
+            const contratosTable = document.getElementById('contratosTable');
+            if (alertas.contratos_vencendo && alertas.contratos_vencendo.length > 0) {
+                contratosTable.innerHTML = alertas.contratos_vencendo.map(c => {
+                    const hoje = new Date();
+                    const vencimento = new Date(c.data_vencimento);
+                    const diasRestantes = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+                    
+                    return `
+                        <tr>
+                            <td>${c.numero_contrato || '-'}</td>
+                            <td>${c.empresa_nome || '-'}</td>
+                            <td>R$ ${parseFloat(c.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                            <td>${new Date(c.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                            <td><span class="badge ${diasRestantes <= 2 ? 'badge-danger' : 'badge-warning'}">${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                contratosTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Nenhum contrato vencendo nos próximos 7 dias</td></tr>';
+            }
+            
+            const cronogramasTable = document.getElementById('cronogramasTable');
+            if (alertas.cronogramas_proximos && alertas.cronogramas_proximos.length > 0) {
+                cronogramasTable.innerHTML = alertas.cronogramas_proximos.map(cr => {
+                    const percentual = parseFloat(cr.percentual_conclusao || 0);
+                    const badgeClass = percentual < 30 ? 'badge-danger' : percentual < 70 ? 'badge-warning' : 'badge-success';
+                    
+                    return `
+                        <tr>
+                            <td>${cr.proposta_numero || '-'}</td>
+                            <td>${cr.empresa_nome || '-'}</td>
+                            <td>${new Date(cr.data_termino).toLocaleDateString('pt-BR')}</td>
+                            <td><span class="badge ${badgeClass}">${percentual}%</span></td>
+                            <td>${percentual < 50 ? '<span class="badge badge-danger">Atrasado</span>' : '<span class="badge badge-warning">Atenção</span>'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                cronogramasTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Nenhum cronograma com prazo próximo</td></tr>';
+            }
+            
+            const propostasTable = document.getElementById('propostasTable');
+            if (alertas.propostas_paradas && alertas.propostas_paradas.length > 0) {
+                propostasTable.innerHTML = alertas.propostas_paradas.map(p => {
+                    const hoje = new Date();
+                    const dataProposta = new Date(p.data_proposta);
+                    const diasParada = Math.floor((hoje - dataProposta) / (1000 * 60 * 60 * 24));
+                    
+                    return `
+                        <tr>
+                            <td>${p.numero_proposta || '-'}</td>
+                            <td>${p.empresa_nome || '-'}</td>
+                            <td>${p.consultor_nome || '-'}</td>
+                            <td>${dataProposta.toLocaleDateString('pt-BR')}</td>
+                            <td><span class="badge badge-danger">${diasParada} dias</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                propostasTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Nenhuma proposta parada há mais de 30 dias</td></tr>';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar alertas:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', carregarAlertas);
+</script>
+{% endblock %}

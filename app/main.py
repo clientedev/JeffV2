@@ -67,6 +67,18 @@ async def root(request: Request):
 async def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
+@app.get("/alertas", response_class=HTMLResponse)
+async def alertas_page(request: Request):
+    return templates.TemplateResponse("alertas.html", {"request": request})
+
+@app.get("/empresas", response_class=HTMLResponse)
+async def empresas_page(request: Request):
+    return templates.TemplateResponse("empresas.html", {"request": request})
+
+@app.get("/consultores", response_class=HTMLResponse)
+async def consultores_page(request: Request):
+    return templates.TemplateResponse("consultores.html", {"request": request})
+
 @app.get("/prospeccao", response_class=HTMLResponse)
 async def prospeccao(request: Request):
     return templates.TemplateResponse("prospeccao.html", {"request": request})
@@ -78,6 +90,10 @@ async def cronograma_page(request: Request):
 @app.get("/contratos", response_class=HTMLResponse)
 async def contratos_page(request: Request):
     return templates.TemplateResponse("contratos.html", {"request": request})
+
+@app.get("/chatbot", response_class=HTMLResponse)
+async def chatbot_page(request: Request):
+    return templates.TemplateResponse("chatbot.html", {"request": request})
 
 @app.get("/importacao", response_class=HTMLResponse)
 async def importacao_page(request: Request):
@@ -93,4 +109,4 @@ async def relatorios_page(request: Request):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "message": "Sistema de Gestão Operacional rodando"}
+    return {"status": "ok", "message": "Sistema de relacionamento com a industria 1.03 rodando"}

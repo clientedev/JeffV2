@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Empresas - Sistema de relacionamento com a industria{% endblock %}
+{% block page_title %}Empresas{% endblock %}
+
+{% block top_actions %}
+<button class="btn btn-primary" onclick="abrirModalNovaEmpresa()">
+    <i class="fas fa-plus"></i>
+    Nova Empresa
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+    <div style="padding: 24px;">
+        <div class="form-row">
+            <div class="form-group">
+                <input type="text" class="form-control" id="buscaEmpresa" placeholder="Buscar por nome ou CNPJ">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="carregarEmpresas()">
+                    <i class="fas fa-search"></i>
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CNPJ</th>
+                    <th>Cidade</th>
+                    <th>Estado</th>
+                    <th>Telefone</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="empresasTable">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal" id="modalEmpresa">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Nova Empresa</h3>
+            <button class="modal-close" onclick="fecharModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formEmpresa">
+                <input type="hidden" id="empresa_id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nome da Empresa *</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CNPJ</label>
+                        <input type="text" class="form-control" id="cnpj" placeholder="00.000.000/0000-00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cidade</label>
+                        <input type="text" class="form-control" id="cidade">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estado</label>
+                        <input type="text" class="form-control" id="estado" maxlength="2" placeholder="SP">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" placeholder="(11) 98765-4321">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarEmpresa()">
+                <i class="fas fa-save"></i>
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_URL = '/api/empresas';
+let empresaEditando = null;
+
+async function carregarEmpresas() {
+    const busca = document.getElementById('buscaEmpresa').value;
+    const tbody = document.getElementById('empresasTable');
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const url = busca ? `${API_URL}?busca=${encodeURIComponent(busca)}` : API_URL;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const empresas = await response.json();
+            
+            if (empresas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhuma empresa encontrada</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = empresas.map(empresa => `
+                <tr>
+                    <td>${empresa.nome || '-'}</td>
+                    <td>${empresa.cnpj || '-'}</td>
+                    <td>${empresa.cidade || '-'}</td>
+                    <td>${empresa.estado || '-'}</td>
+                    <td>${empresa.telefone || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editarEmpresa(${empresa.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="excluirEmpresa(${empresa.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
+    }
+}
+
+function abrirModalNovaEmpresa() {
+    empresaEditando = null;
+    document.getElementById('modalTitle').textContent = 'Nova Empresa';
+    document.getElementById('formEmpresa').reset();
+    document.getElementById('empresa_id').value = '';
+    document.getElementById('modalEmpresa').classList.add('active');
+}
+
+async function editarEmpresa(id) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const empresa = await response.json();
+            empresaEditando = id;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Empresa';
+            document.getElementById('empresa_id').value = empresa.id;
+            document.getElementById('nome').value = empresa.nome || '';
+            document.getElementById('cnpj').value = empresa.cnpj || '';
+            document.getElementById('cidade').value = empresa.cidade || '';
+            document.getElementById('estado').value = empresa.estado || '';
+            document.getElementById('telefone').value = empresa.telefone || '';
+            document.getElementById('email').value = empresa.email || '';
+            
+            document.getElementById('modalEmpresa').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar empresa');
+    }
+}
+
+async function salvarEmpresa() {
+    const id = document.getElementById('empresa_id').value;
+    const dados = {
+        nome: document.getElementById('nome').value,
+        cnpj: document.getElementById('cnpj').value,
+        cidade: document.getElementById('cidade').value,
+        estado: document.getElementById('estado').value,
+        telefone: document.getElementById('telefone').value,
+        email: document.getElementById('email').value
+    };
+    
+    try {
+        const token = localStorage.getItem('token');
+        const url = id ? `${API_URL}/${id}` : API_URL;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        if (response.ok) {
+            fecharModal();
+            carregarEmpresas();
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'Erro ao salvar empresa');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar empresa');
+    }
+}
+
+async function excluirEmpresa(id) {
+    if (!confirm('Deseja realmente excluir esta empresa?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            carregarEmpresas();
+        } else {
+            alert('Erro ao excluir empresa');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir empresa');
+    }
+}
+
+function fecharModal() {
+    document.getElementById('modalEmpresa').classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', carregarEmpresas);
+</script>
+{% endblock %}

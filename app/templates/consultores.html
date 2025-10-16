@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Consultores - Sistema de relacionamento com a industria{% endblock %}
+{% block page_title %}Consultores{% endblock %}
+
+{% block top_actions %}
+<button class="btn btn-primary" onclick="abrirModalNovoConsultor()">
+    <i class="fas fa-plus"></i>
+    Novo Consultor
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+    <div style="padding: 24px;">
+        <div class="form-row">
+            <div class="form-group">
+                <input type="text" class="form-control" id="buscaConsultor" placeholder="Buscar por nome ou email">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="carregarConsultores()">
+                    <i class="fas fa-search"></i>
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Especialidade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="consultoresTable">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal" id="modalConsultor">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Novo Consultor</h3>
+            <button class="modal-close" onclick="fecharModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formConsultor">
+                <input type="hidden" id="consultor_id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo *</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" placeholder="(11) 98765-4321">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Especialidade</label>
+                        <input type="text" class="form-control" id="especialidade" placeholder="Ex: Gestão Industrial">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarConsultor()">
+                <i class="fas fa-save"></i>
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_URL = '/api/consultores';
+
+async function carregarConsultores() {
+    const busca = document.getElementById('buscaConsultor').value;
+    const tbody = document.getElementById('consultoresTable');
+    
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const url = busca ? `${API_URL}?busca=${encodeURIComponent(busca)}` : API_URL;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const consultores = await response.json();
+            
+            if (consultores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Nenhum consultor encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = consultores.map(consultor => `
+                <tr>
+                    <td>${consultor.nome || '-'}</td>
+                    <td>${consultor.email || '-'}</td>
+                    <td>${consultor.telefone || '-'}</td>
+                    <td>${consultor.especialidade || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editarConsultor(${consultor.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="excluirConsultor(${consultor.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Erro ao carregar consultores</td></tr>';
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Erro ao carregar consultores</td></tr>';
+    }
+}
+
+function abrirModalNovoConsultor() {
+    document.getElementById('modalTitle').textContent = 'Novo Consultor';
+    document.getElementById('formConsultor').reset();
+    document.getElementById('consultor_id').value = '';
+    document.getElementById('modalConsultor').classList.add('active');
+}
+
+async function editarConsultor(id) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const consultor = await response.json();
+            
+            document.getElementById('modalTitle').textContent = 'Editar Consultor';
+            document.getElementById('consultor_id').value = consultor.id;
+            document.getElementById('nome').value = consultor.nome || '';
+            document.getElementById('email').value = consultor.email || '';
+            document.getElementById('telefone').value = consultor.telefone || '';
+            document.getElementById('especialidade').value = consultor.especialidade || '';
+            
+            document.getElementById('modalConsultor').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar consultor');
+    }
+}
+
+async function salvarConsultor() {
+    const id = document.getElementById('consultor_id').value;
+    const dados = {
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        telefone: document.getElementById('telefone').value,
+        especialidade: document.getElementById('especialidade').value
+    };
+    
+    try {
+        const token = localStorage.getItem('token');
+        const url = id ? `${API_URL}/${id}` : API_URL;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        if (response.ok) {
+            fecharModal();
+            carregarConsultores();
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'Erro ao salvar consultor');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar consultor');
+    }
+}
+
+async function excluirConsultor(id) {
+    if (!confirm('Deseja realmente excluir este consultor?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            carregarConsultores();
+        } else {
+            alert('Erro ao excluir consultor');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir consultor');
+    }
+}
+
+function fecharModal() {
+    document.getElementById('modalConsultor').classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', carregarConsultores);
+</script>
+{% endblock %}
