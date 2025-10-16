@@ -1,4 +1,4 @@
-modules = ["python-3.11", "postgresql-16"]
+modules = ["python-3.11", "web", "nodejs-20"]
 [agent]
 expertMode = true
 integrations = ["python_database:1.0.0"]
@@ -34,3 +34,7 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 46033
+externalPort = 3000
