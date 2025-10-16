@@ -11,7 +11,7 @@ from app.models.models import Usuario
 from app.auth import get_current_user
 from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas
 
-app = FastAPI(title="Sistema de Gestão Operacional", version="1.0.0")
+app = FastAPI(title="Sistema de relacionamento com a industria", version="1.03")
 
 app.add_middleware(
     CORSMiddleware,

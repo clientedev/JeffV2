@@ -192,7 +192,8 @@ body {
     border-right: 1px solid var(--border-color);
     position: fixed;
     height: 100vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     z-index: 1000;
 }
 
@@ -224,6 +225,9 @@ body {
 
 .sidebar-nav {
     padding: 16px 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .nav-section {
