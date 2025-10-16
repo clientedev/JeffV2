@@ -139,7 +139,7 @@
 async function carregarAlertas() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/alertas/todos', {
+        const response = await fetch('/api/alertas/todos/', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         

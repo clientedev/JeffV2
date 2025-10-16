@@ -251,7 +251,7 @@ async function enviarMensagem(mensagem) {
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/chatbot/perguntar', {
+        const response = await fetch('/api/chatbot/perguntar/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

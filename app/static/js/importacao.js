@@ -30,7 +30,7 @@ async function importarEmpresas() {
     resultDiv.innerHTML = '<div class="loading"></div> Importando...';
     
     try {
-        const response = await fetch(`${API_URL}/importacao/empresas`, {
+        const response = await fetch(`${API_URL}/importacao/empresas/`, {
             method: 'POST',
             headers: getHeaders(),
             body: formData
@@ -74,7 +74,7 @@ async function importarPropostas() {
     resultDiv.innerHTML = '<div class="loading"></div> Importando...';
     
     try {
-        const response = await fetch(`${API_URL}/importacao/propostas`, {
+        const response = await fetch(`${API_URL}/importacao/propostas/`, {
             method: 'POST',
             headers: getHeaders(),
             body: formData

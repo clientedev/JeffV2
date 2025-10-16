@@ -19,7 +19,7 @@ function logout() {
 
 async function carregarContratos() {
     try {
-        const response = await fetch(`${API_URL}/contratos?limit=100`, {
+        const response = await fetch(`${API_URL}/contratos/?limit=100`, {
             headers: getHeaders()
         });
         

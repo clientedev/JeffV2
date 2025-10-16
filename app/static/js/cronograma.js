@@ -19,7 +19,7 @@ function logout() {
 
 async function carregarCronogramas() {
     try {
-        const response = await fetch(`${API_URL}/cronogramas?limit=100`, {
+        const response = await fetch(`${API_URL}/cronogramas/?limit=100`, {
             headers: getHeaders()
         });
         
