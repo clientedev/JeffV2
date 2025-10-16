@@ -1,8 +1,8 @@
-# Sistema de Gestão Operacional
+# Sistema de relacionamento com a industria 1.03
 
 ## Overview
 
-This is a comprehensive operational, commercial, and administrative management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms that need to track client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities.
+This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms that need to track client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities.
 
 ## User Preferences
 
