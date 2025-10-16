@@ -1,0 +1,91 @@
+🧩 1. Sistema de Autenticação e Controle de Acesso
+
+3 níveis de permissão: Admin, Consultor e Financeiro
+
+Painéis e funções adaptadas conforme o perfil de acesso
+
+Logs de atividade para rastreamento de ações
+
+📞 2. Módulo de Prospecção
+
+CRUD completo de prospecções (criação, edição, exclusão e visualização)
+
+Filtros inteligentes por status, consultor, data e taxa de conversão
+
+Linha do tempo de cada prospecção com histórico de contato
+
+Indicadores automáticos de taxa de sucesso e propostas em aberto
+
+🗓️ 3. Módulo de Cronograma
+
+Gestão visual dos projetos em andamento
+
+Andamento em %, cálculo automático de progresso e alertas de tarefas vencidas
+
+Geração automática de cronograma com base em marcos do projeto
+
+Integração direta com o módulo de prospecção e contratos
+
+📄 4. Módulo de Contratos e Faturamento
+
+Cadastro de contratos, valores e parcelas
+
+Controle de vencimentos com alertas automáticos por e-mail e painel
+
+Histórico de faturamento e status de pagamento
+
+Relatórios consolidados por cliente, período e status
+
+📊 5. Dashboard BI Integrado
+
+Cards com indicadores principais:
+
+Projetos ativos
+
+Receita total e mensal
+
+Taxa de conversão de propostas
+
+Horas executadas por projeto/consultor
+
+Gráficos interativos com Plotly
+
+Visualização consolidada do pipeline comercial e operacional
+
+🧠 6. Importação Automática de Dados
+
+Importação em massa de planilhas antigas (CSV/XLSX)
+
+Mapeamento de campos e validação automática
+
+Conversão segura dos dados para o novo banco
+
+⏰ 7. Alertas Inteligentes
+
+Contratos vencidos ou próximos do vencimento
+
+Projetos atrasados ou com tarefas críticas
+
+Propostas paradas por tempo excessivo
+
+📤 8. Exportação e Relatórios
+
+Exportação rápida para Excel e PDF
+
+Modelos padronizados e prontos para impressão
+
+Filtros personalizados por data, consultor ou status
+
+💻 9. Interface e Experiência do Usuário
+
+Layout responsivo com Bootstrap 5
+
+Painel moderno, intuitivo e adaptável a dispositivos móveis
+
+Chatbot interno inteligente para consultas rápidas:
+
+“Quais contratos vencem esta semana?”
+
+“Quais projetos estão com atraso?”
+
+“Qual a taxa de conversão atual?”
