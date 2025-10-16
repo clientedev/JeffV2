@@ -36,10 +36,8 @@ async def listar_propostas(
 ):
     query = db.query(Proposta)
     
-    if current_user.funcao == "Consultor":
-        consultor = db.query(Usuario).filter(Usuario.email == current_user.email).first()
-        if consultor:
-            query = query.filter(Proposta.consultor_id == consultor.id)
+    if current_user.funcao == "Consultor" and current_user.consultor_id:
+        query = query.filter(Proposta.consultor_id == current_user.consultor_id)
     
     if status_filter:
         query = query.filter(Proposta.status == status_filter)

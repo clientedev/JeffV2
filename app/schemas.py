@@ -7,6 +7,7 @@ class UsuarioBase(BaseModel):
     nome: str
     email: EmailStr
     funcao: str
+    consultor_id: Optional[int] = None
 
 class UsuarioCreate(UsuarioBase):
     senha: str

@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+import os
 
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
@@ -38,18 +39,21 @@ async def startup_event():
     init_db()
     db = next(get_db())
     
-    admin_exists = db.query(Usuario).filter(Usuario.email == "admin@sistema.com").first()
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@sistema.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    
+    admin_exists = db.query(Usuario).filter(Usuario.email == admin_email).first()
     if not admin_exists:
         from app.auth import get_password_hash
         admin = Usuario(
             nome="Administrador",
-            email="admin@sistema.com",
-            senha_hash=get_password_hash("admin123"),
+            email=admin_email,
+            senha_hash=get_password_hash(admin_password),
             funcao="Admin"
         )
         db.add(admin)
         db.commit()
-        print("✓ Usuário admin criado: admin@sistema.com / admin123")
+        print(f"✓ Usuário admin criado com email: {admin_email}")
     
     db.close()
 

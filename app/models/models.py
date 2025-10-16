@@ -11,8 +11,12 @@ class Usuario(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     senha_hash = Column(String(255), nullable=False)
     funcao = Column(String(50), nullable=False)  # Admin, Consultor, Financeiro
+    consultor_id = Column(Integer, ForeignKey("consultores.id"), nullable=True)
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    # Relacionamento
+    consultor = relationship("Consultor", foreign_keys=[consultor_id])
 
 class Empresa(Base):
     __tablename__ = "empresas"
