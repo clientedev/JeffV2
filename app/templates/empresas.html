@@ -4,23 +4,71 @@
 {% block page_title %}Empresas{% endblock %}
 
 {% block top_actions %}
-<button class="btn btn-primary" onclick="abrirModalNovaEmpresa()">
-    <i class="fas fa-plus"></i>
-    Nova Empresa
+<button class="btn btn-success" onclick="exportarExcel()">
+    <i class="fas fa-file-excel"></i>
+    Exportar Excel
+</button>
+<button class="btn btn-danger" onclick="exportarPDF()">
+    <i class="fas fa-file-pdf"></i>
+    Exportar PDF
+</button>
+<button class="btn btn-secondary" onclick="limparFiltros()">
+    <i class="fas fa-eraser"></i>
+    Limpar Filtros
 </button>
 {% endblock %}
 
 {% block content %}
 <div class="card" style="margin-bottom: 24px;">
     <div style="padding: 24px;">
+        <h4 style="margin-bottom: 16px;">Filtros</h4>
         <div class="form-row">
             <div class="form-group">
-                <input type="text" class="form-control" id="buscaEmpresa" placeholder="Buscar por nome ou CNPJ">
+                <label class="form-label">Busca Geral</label>
+                <input type="text" class="form-control" id="buscaEmpresa" placeholder="Nome, CNPJ ou Sigla">
             </div>
             <div class="form-group">
+                <label class="form-label">Porte</label>
+                <select class="form-control" id="filtroPorte">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ER</label>
+                <select class="form-control" id="filtroER">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Zona</label>
+                <select class="form-control" id="filtroZona">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Município</label>
+                <select class="form-control" id="filtroMunicipio">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Estado</label>
+                <select class="form-control" id="filtroEstado">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Área</label>
+                <select class="form-control" id="filtroArea">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="form-group" style="align-self: flex-end;">
                 <button class="btn btn-primary" onclick="carregarEmpresas()">
                     <i class="fas fa-search"></i>
-                    Buscar
+                    Filtrar
                 </button>
             </div>
         </div>
@@ -28,21 +76,32 @@
 </div>
 
 <div class="card">
-    <div class="table-container">
+    <div style="padding: 16px; background-color: #f5f5f5; border-bottom: 1px solid #dee2e6;">
+        <span id="totalEmpresas" style="font-weight: 600;">Carregando...</span>
+    </div>
+    <div class="table-container" style="max-height: 600px; overflow: auto;">
         <table>
             <thead>
                 <tr>
-                    <th>Nome</th>
-                    <th>CNPJ</th>
-                    <th>Cidade</th>
-                    <th>Estado</th>
-                    <th>Telefone</th>
-                    <th>Ações</th>
+                    <th style="min-width: 140px;">CNPJ</th>
+                    <th style="min-width: 200px;">Empresa</th>
+                    <th style="min-width: 80px;">Sigla</th>
+                    <th style="min-width: 80px;">Porte</th>
+                    <th style="min-width: 150px;">ER</th>
+                    <th style="min-width: 80px;">Carteira</th>
+                    <th style="min-width: 250px;">Endereço</th>
+                    <th style="min-width: 120px;">Bairro</th>
+                    <th style="min-width: 80px;">Zona</th>
+                    <th style="min-width: 120px;">Município</th>
+                    <th style="min-width: 60px;">UF</th>
+                    <th style="min-width: 150px;">Área</th>
+                    <th style="min-width: 120px;">CNAE</th>
+                    <th style="min-width: 100px;">Nº Func.</th>
                 </tr>
             </thead>
             <tbody id="empresasTable">
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px;">
+                    <td colspan="14" style="text-align: center; padding: 40px;">
                         <span class="loading-spinner"></span> Carregando...
                     </td>
                 </tr>
@@ -50,73 +109,88 @@
         </table>
     </div>
 </div>
-
-<div class="modal" id="modalEmpresa">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title" id="modalTitle">Nova Empresa</h3>
-            <button class="modal-close" onclick="fecharModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="formEmpresa">
-                <input type="hidden" id="empresa_id">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Nome da Empresa *</label>
-                        <input type="text" class="form-control" id="nome" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">CNPJ</label>
-                        <input type="text" class="form-control" id="cnpj" placeholder="00.000.000/0000-00">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cidade</label>
-                        <input type="text" class="form-control" id="cidade">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Estado</label>
-                        <input type="text" class="form-control" id="estado" maxlength="2" placeholder="SP">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Telefone</label>
-                        <input type="text" class="form-control" id="telefone" placeholder="(11) 98765-4321">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email">
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="salvarEmpresa()">
-                <i class="fas fa-save"></i>
-                Salvar
-            </button>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const API_URL = '/api/empresas/';
-let empresaEditando = null;
+const API_URL = '/api/empresas';
+let filtrosCache = {};
+
+async function carregarValoresFiltros() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/filtros/valores`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            filtrosCache = await response.json();
+            
+            const porteSelect = document.getElementById('filtroPorte');
+            filtrosCache.portes.forEach(p => {
+                porteSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+            
+            const erSelect = document.getElementById('filtroER');
+            filtrosCache.ers.forEach(er => {
+                erSelect.innerHTML += `<option value="${er}">${er}</option>`;
+            });
+            
+            const zonaSelect = document.getElementById('filtroZona');
+            filtrosCache.zonas.forEach(z => {
+                zonaSelect.innerHTML += `<option value="${z}">${z}</option>`;
+            });
+            
+            const municipioSelect = document.getElementById('filtroMunicipio');
+            filtrosCache.municipios.forEach(m => {
+                municipioSelect.innerHTML += `<option value="${m}">${m}</option>`;
+            });
+            
+            const estadoSelect = document.getElementById('filtroEstado');
+            filtrosCache.estados.forEach(e => {
+                estadoSelect.innerHTML += `<option value="${e}">${e}</option>`;
+            });
+            
+            const areaSelect = document.getElementById('filtroArea');
+            filtrosCache.areas.forEach(a => {
+                areaSelect.innerHTML += `<option value="${a}">${a}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+    }
+}
 
 async function carregarEmpresas() {
-    const busca = document.getElementById('buscaEmpresa').value;
     const tbody = document.getElementById('empresasTable');
-    
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
     
     try {
         const token = localStorage.getItem('token');
-        const url = busca ? `${API_URL}?busca=${encodeURIComponent(busca)}` : API_URL;
+        const params = new URLSearchParams();
+        
+        const busca = document.getElementById('buscaEmpresa').value;
+        if (busca) params.append('busca', busca);
+        
+        const porte = document.getElementById('filtroPorte').value;
+        if (porte) params.append('porte', porte);
+        
+        const er = document.getElementById('filtroER').value;
+        if (er) params.append('er', er);
+        
+        const zona = document.getElementById('filtroZona').value;
+        if (zona) params.append('zona', zona);
+        
+        const municipio = document.getElementById('filtroMunicipio').value;
+        if (municipio) params.append('municipio', municipio);
+        
+        const estado = document.getElementById('filtroEstado').value;
+        if (estado) params.append('estado', estado);
+        
+        const area = document.getElementById('filtroArea').value;
+        if (area) params.append('area', area);
+        
+        const url = params.toString() ? `${API_URL}/?${params.toString()}` : `${API_URL}/`;
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -125,136 +199,161 @@ async function carregarEmpresas() {
         if (response.ok) {
             const empresas = await response.json();
             
+            document.getElementById('totalEmpresas').textContent = 
+                `Total: ${empresas.length} ${empresas.length === 1 ? 'empresa' : 'empresas'}`;
+            
             if (empresas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhuma empresa encontrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; padding: 40px;">Nenhuma empresa encontrada</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = empresas.map(empresa => `
+            tbody.innerHTML = empresas.map(emp => `
                 <tr>
-                    <td>${empresa.nome || '-'}</td>
-                    <td>${empresa.cnpj || '-'}</td>
-                    <td>${empresa.cidade || '-'}</td>
-                    <td>${empresa.estado || '-'}</td>
-                    <td>${empresa.telefone || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" onclick="editarEmpresa(${empresa.id})" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="excluirEmpresa(${empresa.id})" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
+                    <td>${emp.cnpj || '-'}</td>
+                    <td>${emp.nome || '-'}</td>
+                    <td>${emp.sigla || '-'}</td>
+                    <td>${emp.porte || '-'}</td>
+                    <td>${emp.er || '-'}</td>
+                    <td>${emp.carteira || '-'}</td>
+                    <td>${emp.endereco || '-'}</td>
+                    <td>${emp.bairro || '-'}</td>
+                    <td>${emp.zona || '-'}</td>
+                    <td>${emp.municipio || '-'}</td>
+                    <td>${emp.estado || '-'}</td>
+                    <td>${emp.area || '-'}</td>
+                    <td>${emp.cnae_principal || '-'}</td>
+                    <td>${emp.num_funcionarios || '-'}</td>
                 </tr>
             `).join('');
         } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
         }
     } catch (error) {
         console.error('Erro:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; padding: 40px;">Erro ao carregar empresas</td></tr>';
     }
 }
 
-function abrirModalNovaEmpresa() {
-    empresaEditando = null;
-    document.getElementById('modalTitle').textContent = 'Nova Empresa';
-    document.getElementById('formEmpresa').reset();
-    document.getElementById('empresa_id').value = '';
-    document.getElementById('modalEmpresa').classList.add('active');
+function limparFiltros() {
+    document.getElementById('buscaEmpresa').value = '';
+    document.getElementById('filtroPorte').value = '';
+    document.getElementById('filtroER').value = '';
+    document.getElementById('filtroZona').value = '';
+    document.getElementById('filtroMunicipio').value = '';
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('filtroArea').value = '';
+    carregarEmpresas();
 }
 
-async function editarEmpresa(id) {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-            const empresa = await response.json();
-            empresaEditando = id;
-            
-            document.getElementById('modalTitle').textContent = 'Editar Empresa';
-            document.getElementById('empresa_id').value = empresa.id;
-            document.getElementById('nome').value = empresa.nome || '';
-            document.getElementById('cnpj').value = empresa.cnpj || '';
-            document.getElementById('cidade').value = empresa.cidade || '';
-            document.getElementById('estado').value = empresa.estado || '';
-            document.getElementById('telefone').value = empresa.telefone || '';
-            document.getElementById('email').value = empresa.email || '';
-            
-            document.getElementById('modalEmpresa').classList.add('active');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao carregar empresa');
-    }
-}
-
-async function salvarEmpresa() {
-    const id = document.getElementById('empresa_id').value;
-    const dados = {
-        nome: document.getElementById('nome').value,
-        cnpj: document.getElementById('cnpj').value,
-        cidade: document.getElementById('cidade').value,
-        estado: document.getElementById('estado').value,
-        telefone: document.getElementById('telefone').value,
-        email: document.getElementById('email').value
-    };
+async function exportarExcel() {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams();
+    
+    const busca = document.getElementById('buscaEmpresa').value;
+    if (busca) params.append('busca', busca);
+    
+    const porte = document.getElementById('filtroPorte').value;
+    if (porte) params.append('porte', porte);
+    
+    const er = document.getElementById('filtroER').value;
+    if (er) params.append('er', er);
+    
+    const zona = document.getElementById('filtroZona').value;
+    if (zona) params.append('zona', zona);
+    
+    const municipio = document.getElementById('filtroMunicipio').value;
+    if (municipio) params.append('municipio', municipio);
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) params.append('estado', estado);
+    
+    const area = document.getElementById('filtroArea').value;
+    if (area) params.append('area', area);
+    
+    const url = params.toString() ? `${API_URL}/exportar/excel?${params.toString()}` : `${API_URL}/exportar/excel`;
     
     try {
-        const token = localStorage.getItem('token');
-        const url = id ? `${API_URL}/${id}` : API_URL;
-        const method = id ? 'PUT' : 'POST';
-        
         const response = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(dados)
-        });
-        
-        if (response.ok) {
-            fecharModal();
-            carregarEmpresas();
-        } else {
-            const error = await response.json();
-            alert(error.detail || 'Erro ao salvar empresa');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao salvar empresa');
-    }
-}
-
-async function excluirEmpresa(id) {
-    if (!confirm('Deseja realmente excluir esta empresa?')) return;
-    
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
-            carregarEmpresas();
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'empresas.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
         } else {
-            alert('Erro ao excluir empresa');
+            alert('Erro ao exportar arquivo');
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao excluir empresa');
+        alert('Erro ao exportar arquivo');
     }
 }
 
-function fecharModal() {
-    document.getElementById('modalEmpresa').classList.remove('active');
+async function exportarPDF() {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams();
+    
+    const busca = document.getElementById('buscaEmpresa').value;
+    if (busca) params.append('busca', busca);
+    
+    const porte = document.getElementById('filtroPorte').value;
+    if (porte) params.append('porte', porte);
+    
+    const er = document.getElementById('filtroER').value;
+    if (er) params.append('er', er);
+    
+    const zona = document.getElementById('filtroZona').value;
+    if (zona) params.append('zona', zona);
+    
+    const municipio = document.getElementById('filtroMunicipio').value;
+    if (municipio) params.append('municipio', municipio);
+    
+    const estado = document.getElementById('filtroEstado').value;
+    if (estado) params.append('estado', estado);
+    
+    const area = document.getElementById('filtroArea').value;
+    if (area) params.append('area', area);
+    
+    const url = params.toString() ? `${API_URL}/exportar/pdf?${params.toString()}` : `${API_URL}/exportar/pdf`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'empresas.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+        } else {
+            alert('Erro ao exportar arquivo');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao exportar arquivo');
+    }
 }
 
-document.addEventListener('DOMContentLoaded', carregarEmpresas);
+document.addEventListener('DOMContentLoaded', async () => {
+    await carregarValoresFiltros();
+    await carregarEmpresas();
+});
+
+document.getElementById('buscaEmpresa').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') carregarEmpresas();
+});
 </script>
 {% endblock %}

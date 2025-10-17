@@ -1,8 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date, timedelta, datetime
 from pydantic import BaseModel
+import pandas as pd
+from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+import tempfile
 
 from app.database import get_db
 from app.models.models import Cronograma, Tarefa, Usuario, AlocacaoCronograma, Consultor
@@ -368,3 +376,104 @@ async def deletar_alocacao(
     db.commit()
     
     return {"message": "Alocação deletada com sucesso"}
+
+@router.get("/alocacoes/exportar/excel")
+async def exportar_alocacoes_excel(
+    data_inicio: str = None,
+    data_fim: str = None,
+    consultor_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(AlocacaoCronograma).join(Consultor)
+    
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data <= data_fim_obj)
+    if consultor_id:
+        query = query.filter(AlocacaoCronograma.consultor_id == consultor_id)
+    
+    alocacoes = query.order_by(AlocacaoCronograma.data, AlocacaoCronograma.periodo).all()
+    
+    data = []
+    for alocacao in alocacoes:
+        data.append({
+            "Data": str(alocacao.data),
+            "Consultor": alocacao.consultor.nome,
+            "NIF": alocacao.nif or '',
+            "Período": alocacao.periodo,
+            "Código Projeto": alocacao.codigo_projeto or '',
+            "Observação": alocacao.observacao or ''
+        })
+    
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Cronograma')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=cronograma.xlsx"}
+    )
+
+@router.get("/alocacoes/exportar/pdf")
+async def exportar_alocacoes_pdf(
+    data_inicio: str = None,
+    data_fim: str = None,
+    consultor_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(AlocacaoCronograma).join(Consultor)
+    
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data <= data_fim_obj)
+    if consultor_id:
+        query = query.filter(AlocacaoCronograma.consultor_id == consultor_id)
+    
+    alocacoes = query.order_by(AlocacaoCronograma.data, AlocacaoCronograma.periodo).all()
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        doc = SimpleDocTemplate(tmp.name, pagesize=landscape(letter))
+        elements = []
+        
+        styles = getSampleStyleSheet()
+        title = Paragraph("<b>Relatório de Cronograma de Alocações</b>", styles['Title'])
+        elements.append(title)
+        
+        data = [['Data', 'Consultor', 'NIF', 'Período', 'Código Projeto']]
+        
+        for alocacao in alocacoes:
+            data.append([
+                str(alocacao.data),
+                alocacao.consultor.nome[:25] if alocacao.consultor.nome else '',
+                alocacao.nif or '',
+                alocacao.periodo,
+                alocacao.codigo_projeto[:20] if alocacao.codigo_projeto else ''
+            ])
+        
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(table)
+        doc.build(elements)
+        
+        return FileResponse(tmp.name, media_type="application/pdf", filename="cronograma.pdf")

@@ -828,26 +828,81 @@ async function deletarAlocacao(id) {
 
 async function exportarPDF() {
     const token = localStorage.getItem('token');
-    const ano = mesAtual.getFullYear();
-    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    const dataInicio = getDataInicioMes();
+    const dataFim = getDataFimMes();
     const consultorId = document.getElementById('consultorFiltro').value;
     
-    let url = `/api/relatorios/cronograma-pdf?ano=${ano}&mes=${mes}`;
+    let url = `/api/cronogramas/alocacoes/exportar/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`;
     if (consultorId) url += `&consultor_id=${consultorId}`;
     
-    window.open(url, '_blank');
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'cronograma.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+        } else {
+            alert('Erro ao exportar PDF');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao exportar PDF');
+    }
 }
 
 async function exportarExcel() {
     const token = localStorage.getItem('token');
-    const ano = mesAtual.getFullYear();
-    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    const dataInicio = getDataInicioMes();
+    const dataFim = getDataFimMes();
     const consultorId = document.getElementById('consultorFiltro').value;
     
-    let url = `/api/relatorios/cronograma-excel?ano=${ano}&mes=${mes}`;
+    let url = `/api/cronogramas/alocacoes/exportar/excel?data_inicio=${dataInicio}&data_fim=${dataFim}`;
     if (consultorId) url += `&consultor_id=${consultorId}`;
     
-    window.open(url, '_blank');
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'cronograma.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+        } else {
+            alert('Erro ao exportar Excel');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao exportar Excel');
+    }
+}
+
+function getDataInicioMes() {
+    const ano = mesAtual.getFullYear();
+    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    return `${ano}-${mes}-01`;
+}
+
+function getDataFimMes() {
+    const ultimoDia = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 0).getDate();
+    const ano = mesAtual.getFullYear();
+    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    return `${ano}-${mes}-${ultimoDia}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -29,9 +29,25 @@ class UsuarioResponse(UsuarioBase):
 class EmpresaBase(BaseModel):
     cnpj: str
     nome: str
+    sigla: Optional[str] = None
+    porte: Optional[str] = None
+    er: Optional[str] = None
+    carteira: Optional[str] = None
+    endereco: Optional[str] = None
+    bairro: Optional[str] = None
+    zona: Optional[str] = None
+    municipio: Optional[str] = None
+    estado: Optional[str] = None
+    pais: Optional[str] = None
+    area: Optional[str] = None
+    cnae_principal: Optional[str] = None
+    descricao_cnae: Optional[str] = None
+    tipo_empresa: Optional[str] = None
+    cadastro_atualizacao: Optional[datetime] = None
+    num_funcionarios: Optional[int] = None
+    observacao: Optional[str] = None
     segmento: Optional[str] = None
     regiao: Optional[str] = None
-    er: Optional[str] = None
 
 class EmpresaCreate(EmpresaBase):
     pass
