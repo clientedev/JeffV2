@@ -8,6 +8,35 @@ This is a comprehensive industrial relationship management system built with Fas
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### Cronograma Visual Interativo (October 17, 2025)
+Implementado sistema completo de cronograma visual de alocações de consultores:
+
+**Modelo de Dados**:
+- Adicionado modelo `AlocacaoCronograma` para alocações diárias por período (manhã/tarde)
+- Campo NIF adicionado ao modelo Consultor para identificação única
+
+**Backend (API)**:
+- `/api/cronogramas/alocacoes/listar` - Lista alocações com filtros de data e consultor
+- `/api/cronogramas/alocacoes/gantt` - Dados formatados para gráfico Gantt
+- `/api/cronogramas/alocacoes/estatisticas` - Estatísticas agregadas (total, por consultor, por projeto)
+- `/api/cronogramas/alocacoes/criar` - CRUD para criar alocações (validado com Pydantic)
+- `/api/cronogramas/alocacoes/{id}` - PUT/DELETE para editar e excluir alocações
+
+**Frontend**:
+- Visualização Gantt interativa com Plotly.js
+- Filtros por intervalo de data e consultor
+- Cards de estatísticas (total de alocações, consultores ativos, projetos)
+- Gráfico de barras de alocações por consultor
+- Tabela de alocações com paginação
+- Modal para criar novas alocações
+
+**Importação de Dados**:
+- Script `importar_cronograma.py` para importar planilhas Excel
+- 4966 alocações importadas com sucesso
+- 17 consultores cadastrados automaticamente
+
 ## System Architecture
 
 ### Backend Architecture
@@ -46,14 +75,16 @@ Preferred communication style: Simple, everyday language.
 **Core Entities**:
 1. **Usuario** (User): System users with role-based permissions
 2. **Empresa** (Company): Client companies with CNPJ identification
-3. **Consultor** (Consultant): Project consultants linked to users
+3. **Consultor** (Consultant): Project consultants with NIF identification
 4. **Proposta** (Proposal): Sales proposals with conversion tracking
 5. **Cronograma** (Schedule): Project timelines with progress tracking
-6. **Contrato** (Contract): Financial contracts with payment tracking
-7. **Feriado** (Holiday): Calendar management for scheduling
+6. **AlocacaoCronograma** (Schedule Allocation): Daily consultant allocations by period (morning/afternoon)
+7. **Contrato** (Contract): Financial contracts with payment tracking
+8. **Feriado** (Holiday): Calendar management for scheduling
 
 **Relationships**:
 - One-to-Many: Empresa → Propostas, Proposta → Cronogramas, Proposta → Contratos
+- Consultor → AlocacaoCronograma: Each consultant has multiple daily allocations
 - User-Consultant linking for role-based data filtering
 - Audit trails with creation timestamps on all entities
 
