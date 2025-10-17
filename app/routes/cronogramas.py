@@ -1,12 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import date, timedelta
+from typing import List, Optional
+from datetime import date, timedelta, datetime
+from pydantic import BaseModel
 
 from app.database import get_db
-from app.models.models import Cronograma, Tarefa, Usuario
+from app.models.models import Cronograma, Tarefa, Usuario, AlocacaoCronograma, Consultor
 from app.schemas import CronogramaCreate, CronogramaUpdate, CronogramaResponse, TarefaCreate, TarefaResponse
 from app.auth import get_current_user
+from sqlalchemy import func
+
+class AlocacaoCreate(BaseModel):
+    consultor_id: int
+    data: str
+    periodo: str
+    codigo_projeto: Optional[str] = None
+    observacao: Optional[str] = None
+
+class AlocacaoUpdate(BaseModel):
+    codigo_projeto: Optional[str] = None
+    observacao: Optional[str] = None
 
 router = APIRouter()
 
@@ -166,3 +179,192 @@ async def listar_tarefas(
 ):
     tarefas = db.query(Tarefa).filter(Tarefa.cronograma_id == cronograma_id).order_by(Tarefa.ordem).all()
     return tarefas
+
+@router.get("/alocacoes/listar")
+async def listar_alocacoes(
+    data_inicio: str = None,
+    data_fim: str = None,
+    consultor_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(AlocacaoCronograma).join(Consultor)
+    
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data <= data_fim_obj)
+    if consultor_id:
+        query = query.filter(AlocacaoCronograma.consultor_id == consultor_id)
+    
+    alocacoes = query.order_by(AlocacaoCronograma.data, AlocacaoCronograma.periodo).all()
+    
+    resultado = []
+    for alocacao in alocacoes:
+        resultado.append({
+            "id": alocacao.id,
+            "consultor_id": alocacao.consultor_id,
+            "consultor_nome": alocacao.consultor.nome,
+            "nif": alocacao.nif,
+            "data": str(alocacao.data),
+            "periodo": alocacao.periodo,
+            "codigo_projeto": alocacao.codigo_projeto,
+            "observacao": alocacao.observacao
+        })
+    
+    return resultado
+
+@router.get("/alocacoes/gantt")
+async def obter_dados_gantt(
+    data_inicio: str = None,
+    data_fim: str = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(AlocacaoCronograma).join(Consultor)
+    
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data <= data_fim_obj)
+    
+    alocacoes = query.order_by(Consultor.nome, AlocacaoCronograma.data).all()
+    
+    tarefas_gantt = []
+    for alocacao in alocacoes:
+        tarefas_gantt.append({
+            "Task": f"{alocacao.consultor.nome} - {alocacao.periodo}",
+            "Start": str(alocacao.data),
+            "Finish": str(alocacao.data),
+            "Resource": alocacao.codigo_projeto or "Sem projeto",
+            "Consultor": alocacao.consultor.nome,
+            "Periodo": alocacao.periodo
+        })
+    
+    return tarefas_gantt
+
+@router.get("/alocacoes/estatisticas")
+async def obter_estatisticas(
+    data_inicio: str = None,
+    data_fim: str = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    query = db.query(AlocacaoCronograma)
+    
+    data_inicio_obj = None
+    data_fim_obj = None
+    
+    if data_inicio:
+        data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim:
+        data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AlocacaoCronograma.data <= data_fim_obj)
+    
+    total_alocacoes = query.count()
+    
+    query_consultor = db.query(
+        Consultor.nome,
+        func.count(AlocacaoCronograma.id).label('total')
+    ).join(AlocacaoCronograma)
+    
+    if data_inicio_obj:
+        query_consultor = query_consultor.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim_obj:
+        query_consultor = query_consultor.filter(AlocacaoCronograma.data <= data_fim_obj)
+    
+    alocacoes_por_consultor = query_consultor.group_by(Consultor.nome).all()
+    
+    query_projeto = db.query(
+        AlocacaoCronograma.codigo_projeto,
+        func.count(AlocacaoCronograma.id).label('total')
+    ).filter(AlocacaoCronograma.codigo_projeto != None)
+    
+    if data_inicio_obj:
+        query_projeto = query_projeto.filter(AlocacaoCronograma.data >= data_inicio_obj)
+    if data_fim_obj:
+        query_projeto = query_projeto.filter(AlocacaoCronograma.data <= data_fim_obj)
+    
+    alocacoes_por_projeto = query_projeto.group_by(
+        AlocacaoCronograma.codigo_projeto
+    ).order_by(func.count(AlocacaoCronograma.id).desc()).limit(10).all()
+    
+    return {
+        "total_alocacoes": total_alocacoes,
+        "por_consultor": [{"nome": c[0], "total": c[1]} for c in alocacoes_por_consultor],
+        "top_projetos": [{"projeto": p[0], "total": p[1]} for p in alocacoes_por_projeto]
+    }
+
+@router.post("/alocacoes/criar")
+async def criar_alocacao(
+    alocacao_data: AlocacaoCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    consultor = db.query(Consultor).filter(Consultor.id == alocacao_data.consultor_id).first()
+    if not consultor:
+        raise HTTPException(status_code=404, detail="Consultor não encontrado")
+    
+    data_obj = datetime.strptime(alocacao_data.data, '%Y-%m-%d').date()
+    
+    nova_alocacao = AlocacaoCronograma(
+        consultor_id=alocacao_data.consultor_id,
+        data=data_obj,
+        periodo=alocacao_data.periodo,
+        codigo_projeto=alocacao_data.codigo_projeto,
+        nif=consultor.nif,
+        observacao=alocacao_data.observacao
+    )
+    
+    db.add(nova_alocacao)
+    db.commit()
+    db.refresh(nova_alocacao)
+    
+    return {
+        "id": nova_alocacao.id,
+        "consultor_nome": consultor.nome,
+        "data": str(nova_alocacao.data),
+        "periodo": nova_alocacao.periodo,
+        "codigo_projeto": nova_alocacao.codigo_projeto
+    }
+
+@router.put("/alocacoes/{alocacao_id}")
+async def atualizar_alocacao(
+    alocacao_id: int,
+    alocacao_data: AlocacaoUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    alocacao = db.query(AlocacaoCronograma).filter(AlocacaoCronograma.id == alocacao_id).first()
+    if not alocacao:
+        raise HTTPException(status_code=404, detail="Alocação não encontrada")
+    
+    if alocacao_data.codigo_projeto is not None:
+        alocacao.codigo_projeto = alocacao_data.codigo_projeto
+    if alocacao_data.observacao is not None:
+        alocacao.observacao = alocacao_data.observacao
+    
+    db.commit()
+    db.refresh(alocacao)
+    
+    return {"message": "Alocação atualizada com sucesso", "id": alocacao.id}
+
+@router.delete("/alocacoes/{alocacao_id}")
+async def deletar_alocacao(
+    alocacao_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    alocacao = db.query(AlocacaoCronograma).filter(AlocacaoCronograma.id == alocacao_id).first()
+    if not alocacao:
+        raise HTTPException(status_code=404, detail="Alocação não encontrada")
+    
+    db.delete(alocacao)
+    db.commit()
+    
+    return {"message": "Alocação deletada com sucesso"}

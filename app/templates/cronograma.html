@@ -1,36 +1,248 @@
 {% extends "base.html" %}
 
-{% block title %}Cronogramas - Sistema de Gestão{% endblock %}
-{% block page_title %}Cronogramas{% endblock %}
+{% block title %}Cronograma Visual - Sistema de Gestão{% endblock %}
+{% block page_title %}Cronograma de Alocações{% endblock %}
 
 {% block top_actions %}
-<button class="btn btn-primary" onclick="abrirModalNovoCronograma()">
+<button class="btn btn-primary" onclick="abrirModalNovaAlocacao()">
     <i class="fas fa-plus"></i>
-    Novo Cronograma
+    Nova Alocação
+</button>
+<button class="btn btn-secondary" onclick="atualizarCronograma()">
+    <i class="fas fa-sync"></i>
+    Atualizar
 </button>
 {% endblock %}
 
 {% block content %}
-<div class="alert alert-warning" id="alertasVencimento" style="display: none;"></div>
+<style>
+.filters-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-<div class="card">
-    <div class="table-container">
+.filter-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.stat-card .value {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.gantt-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.periodo-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.periodo-M {
+    background-color: #3498db;
+    color: white;
+}
+
+.periodo-T {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+<div class="filters-card">
+    <h3 style="margin-top: 0;">Filtros</h3>
+    <div class="filter-row">
+        <div class="filter-group">
+            <label>Data Início</label>
+            <input type="date" id="dataInicio" onchange="aplicarFiltros()">
+        </div>
+        <div class="filter-group">
+            <label>Data Fim</label>
+            <input type="date" id="dataFim" onchange="aplicarFiltros()">
+        </div>
+        <div class="filter-group">
+            <label>Consultor</label>
+            <select id="consultorFiltro" onchange="aplicarFiltros()">
+                <option value="">Todos</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total de Alocações</h3>
+        <div class="value" id="totalAlocacoes">0</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <h3>Consultores Ativos</h3>
+        <div class="value" id="totalConsultores">0</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h3>Projetos Ativos</h3>
+        <div class="value" id="totalProjetos">0</div>
+    </div>
+</div>
+
+<div class="gantt-container">
+    <h3 style="margin-top: 0;">Visualização Gantt</h3>
+    <div id="ganttChart"></div>
+</div>
+
+<div class="chart-container">
+    <h3 style="margin-top: 0;">Alocações por Consultor</h3>
+    <div id="consultorChart"></div>
+</div>
+
+<div class="table-card">
+    <h3 style="margin-top: 0;">Lista de Alocações</h3>
+    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
         <table>
             <thead>
                 <tr>
-                    <th>Proposta</th>
-                    <th>Início</th>
-                    <th>Término</th>
-                    <th>Horas Previstas</th>
-                    <th>Horas Executadas</th>
-                    <th>% Conclusão</th>
-                    <th>Status</th>
+                    <th>Consultor</th>
+                    <th>NIF</th>
+                    <th>Data</th>
+                    <th>Período</th>
+                    <th>Projeto</th>
                     <th>Ações</th>
                 </tr>
             </thead>
-            <tbody id="cronogramasTable">
+            <tbody id="alocacoesTable">
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 40px;">
+                    <td colspan="6" style="text-align: center; padding: 40px;">
                         <span class="loading-spinner"></span> Carregando...
                     </td>
                 </tr>
@@ -38,13 +250,330 @@
         </table>
     </div>
 </div>
+
+<div id="modalNovaAlocacao" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Nova Alocação</h2>
+            <span class="close" onclick="fecharModal()">&times;</span>
+        </div>
+        <form id="formNovaAlocacao" onsubmit="salvarNovaAlocacao(event)">
+            <div class="form-group">
+                <label>Consultor *</label>
+                <select id="consultorNovo" required>
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Data *</label>
+                <input type="date" id="dataNova" required>
+            </div>
+            <div class="form-group">
+                <label>Período *</label>
+                <select id="periodoNovo" required>
+                    <option value="">Selecione...</option>
+                    <option value="M">Manhã (M)</option>
+                    <option value="T">Tarde (T)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Código do Projeto</label>
+                <input type="text" id="projetoNovo" placeholder="Ex: C-PRODMEC">
+            </div>
+            <div class="form-group">
+                <label>Observação</label>
+                <input type="text" id="observacaoNova">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/cronograma.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
-function abrirModalNovoCronograma() {
-    alert('Funcionalidade em desenvolvimento');
+let alocacoesData = [];
+let consultoresData = [];
+
+async function carregarConsultores() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/consultores/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        consultoresData = data;
+        
+        const selectFiltro = document.getElementById('consultorFiltro');
+        const selectNovo = document.getElementById('consultorNovo');
+        
+        data.forEach(consultor => {
+            const option1 = new Option(consultor.nome, consultor.id);
+            const option2 = new Option(consultor.nome, consultor.id);
+            selectFiltro.add(option1);
+            selectNovo.add(option2);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar consultores:', error);
+    }
 }
+
+async function carregarEstatisticas() {
+    try {
+        const token = localStorage.getItem('token');
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        
+        let url = '/api/cronogramas/alocacoes/estatisticas';
+        const params = new URLSearchParams();
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const stats = await response.json();
+        
+        document.getElementById('totalAlocacoes').textContent = stats.total_alocacoes;
+        document.getElementById('totalConsultores').textContent = stats.por_consultor.length;
+        document.getElementById('totalProjetos').textContent = stats.top_projetos.length;
+        
+        renderizarGraficoConsultores(stats.por_consultor);
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+function renderizarGraficoConsultores(dados) {
+    const data = [{
+        x: dados.map(d => d.nome),
+        y: dados.map(d => d.total),
+        type: 'bar',
+        marker: {
+            color: 'rgb(102, 126, 234)'
+        }
+    }];
+    
+    const layout = {
+        xaxis: { title: 'Consultor' },
+        yaxis: { title: 'Total de Alocações' },
+        margin: { t: 20 }
+    };
+    
+    Plotly.newPlot('consultorChart', data, layout, {responsive: true});
+}
+
+async function carregarDadosGantt() {
+    try {
+        const token = localStorage.getItem('token');
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        
+        let url = '/api/cronogramas/alocacoes/gantt';
+        const params = new URLSearchParams();
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const ganttData = await response.json();
+        
+        renderizarGantt(ganttData);
+    } catch (error) {
+        console.error('Erro ao carregar dados Gantt:', error);
+    }
+}
+
+function renderizarGantt(dados) {
+    if (dados.length === 0) {
+        document.getElementById('ganttChart').innerHTML = '<p style="text-align: center; color: #999;">Nenhum dado disponível para o período selecionado</p>';
+        return;
+    }
+    
+    const data = [{
+        x: dados.map(d => new Date(d.Start)),
+        y: dados.map(d => d.Task),
+        text: dados.map(d => d.Resource),
+        type: 'scatter',
+        mode: 'markers',
+        marker: {
+            size: 12,
+            color: dados.map(d => d.Periodo === 'M' ? '#3498db' : '#e74c3c')
+        },
+        hovertemplate: '<b>%{y}</b><br>Data: %{x}<br>Projeto: %{text}<extra></extra>'
+    }];
+    
+    const layout = {
+        xaxis: {
+            title: 'Data',
+            type: 'date'
+        },
+        yaxis: {
+            title: 'Consultor - Período'
+        },
+        height: 600,
+        margin: { l: 200, r: 50, t: 20, b: 100 }
+    };
+    
+    Plotly.newPlot('ganttChart', data, layout, {responsive: true});
+}
+
+async function carregarAlocacoes() {
+    try {
+        const token = localStorage.getItem('token');
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        const consultorId = document.getElementById('consultorFiltro').value;
+        
+        let url = '/api/cronogramas/alocacoes/listar';
+        const params = new URLSearchParams();
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (consultorId) params.append('consultor_id', consultorId);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const alocacoes = await response.json();
+        alocacoesData = alocacoes;
+        
+        renderizarTabelaAlocacoes(alocacoes);
+    } catch (error) {
+        console.error('Erro ao carregar alocações:', error);
+        document.getElementById('alocacoesTable').innerHTML = `
+            <tr><td colspan="6" style="text-align: center; color: #e74c3c;">
+                Erro ao carregar alocações. Tente novamente.
+            </td></tr>
+        `;
+    }
+}
+
+function renderizarTabelaAlocacoes(alocacoes) {
+    const tbody = document.getElementById('alocacoesTable');
+    
+    if (alocacoes.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                Nenhuma alocação encontrada
+            </td></tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = alocacoes.map(alocacao => `
+        <tr>
+            <td>${alocacao.consultor_nome}</td>
+            <td>${alocacao.nif || '-'}</td>
+            <td>${new Date(alocacao.data).toLocaleDateString('pt-BR')}</td>
+            <td><span class="periodo-badge periodo-${alocacao.periodo}">${alocacao.periodo === 'M' ? 'Manhã' : 'Tarde'}</span></td>
+            <td>${alocacao.codigo_projeto || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deletarAlocacao(${alocacao.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function aplicarFiltros() {
+    carregarAlocacoes();
+    carregarDadosGantt();
+    carregarEstatisticas();
+}
+
+function atualizarCronograma() {
+    aplicarFiltros();
+}
+
+function abrirModalNovaAlocacao() {
+    document.getElementById('modalNovaAlocacao').style.display = 'block';
+}
+
+function fecharModal() {
+    document.getElementById('modalNovaAlocacao').style.display = 'none';
+    document.getElementById('formNovaAlocacao').reset();
+}
+
+async function salvarNovaAlocacao(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    const data = {
+        consultor_id: parseInt(document.getElementById('consultorNovo').value),
+        data: document.getElementById('dataNova').value,
+        periodo: document.getElementById('periodoNovo').value,
+        codigo_projeto: document.getElementById('projetoNovo').value || null,
+        observacao: document.getElementById('observacaoNova').value || null
+    };
+    
+    try {
+        const response = await fetch('/api/cronogramas/alocacoes/criar', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            alert('Alocação criada com sucesso!');
+            fecharModal();
+            atualizarCronograma();
+        } else {
+            const error = await response.json();
+            alert('Erro ao criar alocação: ' + (error.detail || 'Erro desconhecido'));
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao criar alocação. Tente novamente.');
+    }
+}
+
+async function deletarAlocacao(id) {
+    if (!confirm('Tem certeza que deseja deletar esta alocação?')) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const response = await fetch(`/api/cronogramas/alocacoes/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            alert('Alocação deletada com sucesso!');
+            atualizarCronograma();
+        } else {
+            alert('Erro ao deletar alocação');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao deletar alocação');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const hoje = new Date();
+    const trintaDiasAtras = new Date(hoje);
+    trintaDiasAtras.setDate(hoje.getDate() - 30);
+    const trintaDiasFrente = new Date(hoje);
+    trintaDiasFrente.setDate(hoje.getDate() + 30);
+    
+    document.getElementById('dataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
+    document.getElementById('dataFim').value = trintaDiasFrente.toISOString().split('T')[0];
+    
+    carregarConsultores();
+    aplicarFiltros();
+});
 </script>
 {% endblock %}

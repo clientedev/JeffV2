@@ -44,6 +44,7 @@ class Consultor(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True)
+    nif = Column(String(50), unique=True, index=True)
     cargo = Column(String(100))
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
@@ -132,3 +133,19 @@ class Feriado(Base):
     data = Column(Date, unique=True, nullable=False, index=True)
     descricao = Column(String(255))
     tipo = Column(String(50))  # Nacional, Estadual, Municipal
+
+class AlocacaoCronograma(Base):
+    __tablename__ = "alocacoes_cronograma"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    consultor_id = Column(Integer, ForeignKey("consultores.id"), nullable=False)
+    data = Column(Date, nullable=False, index=True)
+    periodo = Column(String(10), nullable=False)  # M (Manhã) ou T (Tarde)
+    codigo_projeto = Column(String(100))  # Ex: C-PRODMEC, K-KAMAPRI2
+    nif = Column(String(50))  # Número de identificação do consultor
+    observacao = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamento
+    consultor = relationship("Consultor", foreign_keys=[consultor_id])
