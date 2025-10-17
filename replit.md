@@ -10,8 +10,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Cronograma Visual Interativo (October 17, 2025)
-Implementado sistema completo de cronograma visual de alocações de consultores:
+### Cronograma Visual em Calendário (October 17, 2025)
+Implementado sistema completo de cronograma visual de alocações de consultores em formato de calendário mensal:
 
 **Modelo de Dados**:
 - Adicionado modelo `AlocacaoCronograma` para alocações diárias por período (manhã/tarde)
@@ -19,18 +19,21 @@ Implementado sistema completo de cronograma visual de alocações de consultores
 
 **Backend (API)**:
 - `/api/cronogramas/alocacoes/listar` - Lista alocações com filtros de data e consultor
-- `/api/cronogramas/alocacoes/gantt` - Dados formatados para gráfico Gantt
-- `/api/cronogramas/alocacoes/estatisticas` - Estatísticas agregadas (total, por consultor, por projeto)
 - `/api/cronogramas/alocacoes/criar` - CRUD para criar alocações (validado com Pydantic)
 - `/api/cronogramas/alocacoes/{id}` - PUT/DELETE para editar e excluir alocações
+- `/api/relatorios/cronograma-pdf` - Exporta cronograma em PDF com filtros aplicados
+- `/api/relatorios/cronograma-excel` - Exporta cronograma em Excel com filtros aplicados
 
-**Frontend**:
-- Visualização Gantt interativa com Plotly.js
-- Filtros por intervalo de data e consultor
-- Cards de estatísticas (total de alocações, consultores ativos, projetos)
-- Gráfico de barras de alocações por consultor
-- Tabela de alocações com paginação
-- Modal para criar novas alocações
+**Frontend - Calendário Visual**:
+- **Layout de Calendário Mensal**: Visualização em grid 7x6 com dias da semana
+- **Tema Escuro Completo**: Paleta de cores consistente (#1a1f3a, #2d3561, #667eea)
+- **Legenda Visual Colorizada**: 7 tipos de projeto com cores distintas (C-, K-, F-, M-, T-, P-, O-)
+- **Navegação entre Meses**: Botões para avançar/retroceder meses com carregamento dinâmico
+- **Filtros por Consultor**: Dropdown para filtrar alocações por consultor específico
+- **Edição Inline**: Hover sobre alocações exibe botão de exclusão
+- **Modal de Edição por Dia**: Clique no dia abre modal mostrando todas as alocações (manhã/tarde)
+- **Modal de Criação**: Adicionar novas alocações com validação de campos
+- **Exportação com Filtros**: Botões PDF/Excel exportam dados filtrados do mês/consultor atual
 
 **Importação de Dados**:
 - Script `importar_cronograma.py` para importar planilhas Excel
