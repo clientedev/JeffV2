@@ -37,6 +37,10 @@
                         <i class="fas fa-building"></i>
                         <span>Empresas</span>
                     </a>
+                    <a href="/contatos" class="nav-item {% if request.path == '/contatos' %}active{% endif %}">
+                        <i class="fas fa-address-book"></i>
+                        <span>Contatos</span>
+                    </a>
                     <a href="/consultores" class="nav-item {% if request.path == '/consultores' %}active{% endif %}">
                         <i class="fas fa-user-tie"></i>
                         <span>Consultores</span>
@@ -56,6 +60,14 @@
                     <a href="/contratos" class="nav-item {% if request.path == '/contratos' %}active{% endif %}">
                         <i class="fas fa-file-contract"></i>
                         <span>Contratos</span>
+                    </a>
+                    <a href="/linha-tecnologia" class="nav-item {% if request.path == '/linha-tecnologia' %}active{% endif %}">
+                        <i class="fas fa-cogs"></i>
+                        <span>Linha Tecnologia</span>
+                    </a>
+                    <a href="/linha-educacional" class="nav-item {% if request.path == '/linha-educacional' %}active{% endif %}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Linha Educacional</span>
                     </a>
                 </div>
                 

@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional
 
 app = FastAPI(
     title="Sistema de relacionamento com a industria",
@@ -38,6 +38,9 @@ app.include_router(importacao.router, prefix="/api/importacao", tags=["Importaç
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
 app.include_router(relatorios.router, prefix="/api/relatorios", tags=["Relatórios"])
 app.include_router(alertas.router, prefix="/api/alertas", tags=["Alertas"])
+app.include_router(contatos.router, prefix="/api/contatos", tags=["Contatos"])
+app.include_router(linha_tecnologia.router, prefix="/api/linha-tecnologia", tags=["Linha Tecnologia"])
+app.include_router(linha_educacional.router, prefix="/api/linha-educacional", tags=["Linha Educacional"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -61,6 +64,13 @@ async def startup_event():
         print(f"✓ Usuário admin criado com email: {admin_email}")
     
     db.close()
+    
+    # Importar dados iniciais das planilhas Excel (apenas se não existirem)
+    try:
+        from app.seed_data import seed_all_data
+        seed_all_data()
+    except Exception as e:
+        print(f"⚠ Erro ao importar dados iniciais: {e}")
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -109,6 +119,18 @@ async def usuarios_page(request: Request):
 @app.get("/relatorios", response_class=HTMLResponse)
 async def relatorios_page(request: Request):
     return templates.TemplateResponse("relatorios.html", {"request": request})
+
+@app.get("/contatos", response_class=HTMLResponse)
+async def contatos_page(request: Request):
+    return templates.TemplateResponse("contatos.html", {"request": request})
+
+@app.get("/linha-tecnologia", response_class=HTMLResponse)
+async def linha_tecnologia_page(request: Request):
+    return templates.TemplateResponse("linha_tecnologia.html", {"request": request})
+
+@app.get("/linha-educacional", response_class=HTMLResponse)
+async def linha_educacional_page(request: Request):
+    return templates.TemplateResponse("linha_educacional.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

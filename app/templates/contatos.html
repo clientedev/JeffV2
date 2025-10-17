@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Contatos - Sistema de Relacionamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Gestão de Contatos</h2>
+            <p class="text-muted">Gerenciar contatos de empresas</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar...">
+        </div>
+        <div class="col-md-2">
+            <select id="porteFilter" class="form-select">
+                <option value="">Todos os Portes</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="erFilter" class="form-select">
+                <option value="">Todas as ERs</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="carteiraFilter" class="form-select">
+                <option value="">Todas as Carteiras</option>
+            </select>
+        </div>
+        <div class="col-md-3 text-end">
+            <button class="btn btn-success" onclick="novoContato()">
+                <i class="bi bi-plus-circle"></i> Novo Contato
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download"></i> Exportar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportarPDF()">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>CNPJ</th>
+                                    <th>Contato</th>
+                                    <th>Cargo</th>
+                                    <th>Telefone</th>
+                                    <th>Email</th>
+                                    <th>ER</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contatosTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo/Editar Contato -->
+<div class="modal fade" id="contatoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contatoForm">
+                    <input type="hidden" id="contatoId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" id="empresa">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" id="cnpj">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Porte</label>
+                            <input type="text" class="form-control" id="porte">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">ER</label>
+                            <input type="text" class="form-control" id="er">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Carteira</label>
+                            <input type="text" class="form-control" id="carteira">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Contato</label>
+                            <input type="text" class="form-control" id="contato">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ponto Focal</label>
+                            <input type="text" class="form-control" id="ponto_focal">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" id="cargo">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Proprietário/Sócio</label>
+                            <input type="text" class="form-control" id="proprietario_socio">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Telefone Fixo</label>
+                            <input type="text" class="form-control" id="telefone_fixo">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" class="form-control" id="celular">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Celular 2</label>
+                            <input type="text" class="form-control" id="celular2">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mails Voltaram</label>
+                            <input type="text" class="form-control" id="emails_voltaram">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Atualização</label>
+                        <input type="date" class="form-control" id="atualizacao">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarContato()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let contatos = [];
+let filtros = {};
+
+async function carregarFiltros() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/contatos/filtros', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        filtros = await response.json();
+        
+        const porteSelect = document.getElementById('porteFilter');
+        filtros.portes.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p;
+            option.textContent = p;
+            porteSelect.appendChild(option);
+        });
+        
+        const erSelect = document.getElementById('erFilter');
+        filtros.ers.forEach(e => {
+            const option = document.createElement('option');
+            option.value = e;
+            option.textContent = e;
+            erSelect.appendChild(option);
+        });
+        
+        const carteiraSelect = document.getElementById('carteiraFilter');
+        filtros.carteiras.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c;
+            option.textContent = c;
+            carteiraSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+    }
+}
+
+async function carregarContatos() {
+    try {
+        const token = localStorage.getItem('token');
+        const search = document.getElementById('searchInput').value;
+        const porte = document.getElementById('porteFilter').value;
+        const er = document.getElementById('erFilter').value;
+        const carteira = document.getElementById('carteiraFilter').value;
+        
+        let url = '/api/contatos/?limit=1000';
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (porte) url += `&porte=${encodeURIComponent(porte)}`;
+        if (er) url += `&er=${encodeURIComponent(er)}`;
+        if (carteira) url += `&carteira=${encodeURIComponent(carteira)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        contatos = await response.json();
+        renderizarTabela();
+    } catch (error) {
+        console.error('Erro ao carregar contatos:', error);
+    }
+}
+
+function renderizarTabela() {
+    const tbody = document.getElementById('contatosTableBody');
+    
+    if (contatos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum contato encontrado</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = contatos.map(c => `
+        <tr>
+            <td>${c.empresa || ''}</td>
+            <td>${c.cnpj || ''}</td>
+            <td>${c.contato || ''}</td>
+            <td>${c.cargo || ''}</td>
+            <td>${c.celular || c.telefone_fixo || ''}</td>
+            <td>${c.email || ''}</td>
+            <td>${c.er || ''}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editarContato(${c.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deletarContato(${c.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function novoContato() {
+    document.getElementById('contatoForm').reset();
+    document.getElementById('contatoId').value = '';
+    document.querySelector('#contatoModal .modal-title').textContent = 'Novo Contato';
+    new bootstrap.Modal(document.getElementById('contatoModal')).show();
+}
+
+async function editarContato(id) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/contatos/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const contato = await response.json();
+        
+        document.getElementById('contatoId').value = contato.id;
+        document.getElementById('empresa').value = contato.empresa || '';
+        document.getElementById('cnpj').value = contato.cnpj || '';
+        document.getElementById('porte').value = contato.porte || '';
+        document.getElementById('er').value = contato.er || '';
+        document.getElementById('carteira').value = contato.carteira || '';
+        document.getElementById('contato').value = contato.contato || '';
+        document.getElementById('ponto_focal').value = contato.ponto_focal || '';
+        document.getElementById('cargo').value = contato.cargo || '';
+        document.getElementById('proprietario_socio').value = contato.proprietario_socio || '';
+        document.getElementById('telefone_fixo').value = contato.telefone_fixo || '';
+        document.getElementById('celular').value = contato.celular || '';
+        document.getElementById('celular2').value = contato.celular2 || '';
+        document.getElementById('email').value = contato.email || '';
+        document.getElementById('emails_voltaram').value = contato.emails_voltaram || '';
+        document.getElementById('observacoes').value = contato.observacoes || '';
+        document.getElementById('atualizacao').value = contato.atualizacao || '';
+        
+        document.querySelector('#contatoModal .modal-title').textContent = 'Editar Contato';
+        new bootstrap.Modal(document.getElementById('contatoModal')).show();
+    } catch (error) {
+        console.error('Erro ao carregar contato:', error);
+        alert('Erro ao carregar contato');
+    }
+}
+
+async function salvarContato() {
+    try {
+        const token = localStorage.getItem('token');
+        const id = document.getElementById('contatoId').value;
+        
+        const data = {
+            empresa: document.getElementById('empresa').value || null,
+            cnpj: document.getElementById('cnpj').value || null,
+            porte: document.getElementById('porte').value || null,
+            er: document.getElementById('er').value || null,
+            carteira: document.getElementById('carteira').value || null,
+            contato: document.getElementById('contato').value || null,
+            ponto_focal: document.getElementById('ponto_focal').value || null,
+            cargo: document.getElementById('cargo').value || null,
+            proprietario_socio: document.getElementById('proprietario_socio').value || null,
+            telefone_fixo: document.getElementById('telefone_fixo').value || null,
+            celular: document.getElementById('celular').value || null,
+            celular2: document.getElementById('celular2').value || null,
+            email: document.getElementById('email').value || null,
+            emails_voltaram: document.getElementById('emails_voltaram').value || null,
+            observacoes: document.getElementById('observacoes').value || null,
+            atualizacao: document.getElementById('atualizacao').value || null
+        };
+        
+        const url = id ? `/api/contatos/${id}` : '/api/contatos/';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('contatoModal')).hide();
+            carregarContatos();
+            alert('Contato salvo com sucesso!');
+        } else {
+            alert('Erro ao salvar contato');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar contato:', error);
+        alert('Erro ao salvar contato');
+    }
+}
+
+async function deletarContato(id) {
+    if (!confirm('Deseja realmente deletar este contato?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/contatos/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            carregarContatos();
+            alert('Contato deletado com sucesso!');
+        } else {
+            alert('Erro ao deletar contato');
+        }
+    } catch (error) {
+        console.error('Erro ao deletar contato:', error);
+        alert('Erro ao deletar contato');
+    }
+}
+
+function exportarExcel() {
+    const token = localStorage.getItem('token');
+    const search = document.getElementById('searchInput').value;
+    const porte = document.getElementById('porteFilter').value;
+    const er = document.getElementById('erFilter').value;
+    const carteira = document.getElementById('carteiraFilter').value;
+    
+    let url = '/api/contatos/exportar/excel?';
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (porte) url += `porte=${encodeURIComponent(porte)}&`;
+    if (er) url += `er=${encodeURIComponent(er)}&`;
+    if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
+    
+    window.location.href = url + `token=${token}`;
+}
+
+function exportarPDF() {
+    const token = localStorage.getItem('token');
+    const search = document.getElementById('searchInput').value;
+    const porte = document.getElementById('porteFilter').value;
+    const er = document.getElementById('erFilter').value;
+    const carteira = document.getElementById('carteiraFilter').value;
+    
+    let url = '/api/contatos/exportar/pdf?';
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (porte) url += `porte=${encodeURIComponent(porte)}&`;
+    if (er) url += `er=${encodeURIComponent(er)}&`;
+    if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
+    
+    window.location.href = url + `token=${token}`;
+}
+
+document.getElementById('searchInput').addEventListener('keyup', debounce(carregarContatos, 500));
+document.getElementById('porteFilter').addEventListener('change', carregarContatos);
+document.getElementById('erFilter').addEventListener('change', carregarContatos);
+document.getElementById('carteiraFilter').addEventListener('change', carregarContatos);
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+carregarFiltros();
+carregarContatos();
+</script>
+{% endblock %}

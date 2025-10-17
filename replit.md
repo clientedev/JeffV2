@@ -84,6 +84,9 @@ Implementado sistema completo de cronograma visual de alocações de consultores
 6. **AlocacaoCronograma** (Schedule Allocation): Daily consultant allocations by period (morning/afternoon)
 7. **Contrato** (Contract): Financial contracts with payment tracking
 8. **Feriado** (Holiday): Calendar management for scheduling
+9. **Contato** (Contact): Company contacts with protected initial data from Excel import
+10. **LinhaTecnologia** (Technology Line): Technology programs with immutable seed data
+11. **LinhaEducacional** (Educational Line): Educational programs with immutable seed data
 
 **Relationships**:
 - One-to-Many: Empresa → Propostas, Proposta → Cronogramas, Proposta → Contratos
@@ -100,6 +103,9 @@ Implementado sistema completo de cronograma visual de alocações de consultores
 - `/api/propostas` - Proposal tracking with filters
 - `/api/cronogramas` - Schedule management with progress calculation
 - `/api/contratos` - Contract and payment tracking
+- `/api/contatos` - Contact management with filters and Excel export
+- `/api/linha-tecnologia` - Technology line programs with CRUD and export
+- `/api/linha-educacional` - Educational line programs with CRUD and export
 - `/api/bi` - Business intelligence aggregations
 - `/api/importacao` - Excel/CSV data import
 - `/api/chatbot` - Natural language query interface
@@ -183,6 +189,19 @@ Successfully imported from Excel spreadsheets:
 - **19 Consultants** (Consultores) - Project consultants assigned to proposals
 - **224 Proposals** (Propostas) - Sales proposals with status tracking and consultant assignments
 - **224 Schedules** (Cronogramas) - Project timelines with automatic progress calculation
+
+### Novos Dados Permanentes (October 17, 2025)
+Sistema de importação automática de dados das planilhas Excel com proteção contra modificação:
+- **3003 Contatos** - Base completa de contatos de empresas com informações detalhadas
+- **2940 Linha Tecnologia** - Registros de programas da linha tecnologia
+- **266 Linha Educacional** - Registros de programas da linha educacional
+
+**Características**:
+- Dados marcados com `dados_iniciais=True` no banco
+- Proteção a nível de API: endpoints PUT/DELETE retornam HTTP 403 para dados iniciais
+- Importação automática na inicialização (apenas primeira vez)
+- Sistema idempotente: não reimporta dados já existentes
+- Novos registros criados pelo usuário são editáveis/deletáveis normalmente
 
 ### System Readiness
 All 9 core requirements are implemented and functional:

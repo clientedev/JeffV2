@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Linha Educacional - Sistema de Relacionamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Linha Educacional</h2>
+            <p class="text-muted">Gerenciar programas da linha tecnologia</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar...">
+        </div>
+        <div class="col-md-2">
+            <select id="situacaoFilter" class="form-select">
+                <option value="">Todas as Situações</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="anoFilter" class="form-select">
+                <option value="">Todos os Anos</option>
+            </select>
+        </div>
+        <div class="col-md-5 text-end">
+            <button class="btn btn-success" onclick="novoRegistro()">
+                <i class="bi bi-plus-circle"></i> Novo Registro
+            </button>
+            <button class="btn btn-primary" onclick="exportarExcel()">
+                <i class="bi bi-download"></i> Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>N º Proposta</th>
+                                    <th>Consultor</th>
+                                    <th>Situação</th>
+                                    <th>Valor</th>
+                                    <th>Ano</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registrosTableBody">
+                                <tr><td colspan="7" class="text-center">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="registroModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registro - Linha Educacional</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registroForm">
+                    <input type="hidden" id="registroId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" id="empresa">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" id="cnpj">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Nº Proposta</label>
+                            <input type="text" class="form-control" id="numero_proposta">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Consultor</label>
+                            <input type="text" class="form-control" id="consultor">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Valor Proposta</label>
+                            <input type="number" step="0.01" class="form-control" id="valor_proposta">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Situação</label>
+                            <input type="text" class="form-control" id="situacao">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Ano</label>
+                            <input type="number" class="form-control" id="ano">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Mês</label>
+                            <input type="text" class="form-control" id="mes">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="data_inicio">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data Término</label>
+                            <input type="date" class="form-control" id="data_termino">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarRegistro()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let registros = [];
+
+async function carregarFiltros() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/linha-educacional/filtros', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const filtros = await response.json();
+        
+        const situacaoSelect = document.getElementById('situacaoFilter');
+        filtros.situacoes.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s;
+            option.textContent = s;
+            situacaoSelect.appendChild(option);
+        });
+        
+        const anoSelect = document.getElementById('anoFilter');
+        filtros.anos.forEach(a => {
+            const option = document.createElement('option');
+            option.value = a;
+            option.textContent = a;
+            anoSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+    }
+}
+
+async function carregarRegistros() {
+    try {
+        const token = localStorage.getItem('token');
+        const search = document.getElementById('searchInput').value;
+        const situacao = document.getElementById('situacaoFilter').value;
+        const ano = document.getElementById('anoFilter').value;
+        
+        let url = '/api/linha-educacional/?limit=1000';
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (situacao) url += `&situacao=${encodeURIComponent(situacao)}`;
+        if (ano) url += `&ano=${ano}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        registros = await response.json();
+        renderizarTabela();
+    } catch (error) {
+        console.error('Erro ao carregar registros:', error);
+    }
+}
+
+function renderizarTabela() {
+    const tbody = document.getElementById('registrosTableBody');
+    
+    if (registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum registro encontrado</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = registros.map(r => `
+        <tr>
+            <td>${r.empresa || ''}</td>
+            <td>${r.numero_proposta || ''}</td>
+            <td>${r.consultor || ''}</td>
+            <td>${r.situacao || ''}</td>
+            <td>${r.valor_proposta ? 'R$ ' + parseFloat(r.valor_proposta).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : ''}</td>
+            <td>${r.ano || ''}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editarRegistro(${r.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deletarRegistro(${r.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function novoRegistro() {
+    document.getElementById('registroForm').reset();
+    document.getElementById('registroId').value = '';
+    new bootstrap.Modal(document.getElementById('registroModal')).show();
+}
+
+async function editarRegistro(id) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/linha-educacional/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const registro = await response.json();
+        
+        document.getElementById('registroId').value = registro.id;
+        document.getElementById('empresa').value = registro.empresa || '';
+        document.getElementById('cnpj').value = registro.cnpj || '';
+        document.getElementById('numero_proposta').value = registro.numero_proposta || '';
+        document.getElementById('consultor').value = registro.consultor || '';
+        document.getElementById('valor_proposta').value = registro.valor_proposta || '';
+        document.getElementById('situacao').value = registro.situacao || '';
+        document.getElementById('ano').value = registro.ano || '';
+        document.getElementById('mes').value = registro.mes || '';
+        document.getElementById('data_inicio').value = registro.data_inicio || '';
+        document.getElementById('data_termino').value = registro.data_termino || '';
+        document.getElementById('observacoes').value = registro.observacoes || '';
+        
+        new bootstrap.Modal(document.getElementById('registroModal')).show();
+    } catch (error) {
+        console.error('Erro ao carregar registro:', error);
+        alert('Erro ao carregar registro');
+    }
+}
+
+async function salvarRegistro() {
+    try {
+        const token = localStorage.getItem('token');
+        const id = document.getElementById('registroId').value;
+        
+        const data = {
+            empresa: document.getElementById('empresa').value || null,
+            cnpj: document.getElementById('cnpj').value || null,
+            numero_proposta: document.getElementById('numero_proposta').value || null,
+            consultor: document.getElementById('consultor').value || null,
+            valor_proposta: document.getElementById('valor_proposta').value || null,
+            situacao: document.getElementById('situacao').value || null,
+            ano: document.getElementById('ano').value ? parseInt(document.getElementById('ano').value) : null,
+            mes: document.getElementById('mes').value || null,
+            data_inicio: document.getElementById('data_inicio').value || null,
+            data_termino: document.getElementById('data_termino').value || null,
+            observacoes: document.getElementById('observacoes').value || null
+        };
+        
+        const url = id ? `/api/linha-educacional/${id}` : '/api/linha-educacional/';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('registroModal')).hide();
+            carregarRegistros();
+            alert('Registro salvo com sucesso!');
+        } else {
+            alert('Erro ao salvar registro');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar registro:', error);
+        alert('Erro ao salvar registro');
+    }
+}
+
+async function deletarRegistro(id) {
+    if (!confirm('Deseja realmente deletar este registro?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/linha-educacional/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            carregarRegistros();
+            alert('Registro deletado com sucesso!');
+        } else {
+            alert('Erro ao deletar registro');
+        }
+    } catch (error) {
+        console.error('Erro ao deletar registro:', error);
+        alert('Erro ao deletar registro');
+    }
+}
+
+function exportarExcel() {
+    const token = localStorage.getItem('token');
+    const search = document.getElementById('searchInput').value;
+    const situacao = document.getElementById('situacaoFilter').value;
+    const ano = document.getElementById('anoFilter').value;
+    
+    let url = '/api/linha-educacional/exportar/excel?';
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (situacao) url += `situacao=${encodeURIComponent(situacao)}&`;
+    if (ano) url += `ano=${ano}&`;
+    
+    window.location.href = url + `token=${token}`;
+}
+
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    setTimeout(carregarRegistros, 500);
+});
+document.getElementById('situacaoFilter').addEventListener('change', carregarRegistros);
+document.getElementById('anoFilter').addEventListener('change', carregarRegistros);
+
+carregarFiltros();
+carregarRegistros();
+</script>
+{% endblock %}
