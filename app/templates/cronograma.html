@@ -8,20 +8,33 @@
     <i class="fas fa-plus"></i>
     Nova Alocação
 </button>
-<button class="btn btn-secondary" onclick="atualizarCronograma()">
-    <i class="fas fa-sync"></i>
-    Atualizar
+<button class="btn btn-success" onclick="exportarPDF()">
+    <i class="fas fa-file-pdf"></i>
+    Exportar PDF
+</button>
+<button class="btn btn-success" onclick="exportarExcel()">
+    <i class="fas fa-file-excel"></i>
+    Exportar Excel
 </button>
 {% endblock %}
 
 {% block content %}
 <style>
+:root {
+    --bg-dark: #1a1d2e;
+    --bg-darker: #12141f;
+    --bg-card: #22273b;
+    --text-light: #e0e0e0;
+    --border-color: #2d3548;
+    --hover-bg: #2a3047;
+}
+
 .filters-card {
-    background: white;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
 }
 
 .filter-row {
@@ -40,57 +53,214 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: #2c3e50;
+    color: var(--text-light);
 }
 
 .filter-group input,
 .filter-group select {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 14px;
+    background: var(--bg-darker);
+    color: var(--text-light);
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 25px;
-}
-
-.stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.stat-card h3 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-.stat-card .value {
-    font-size: 32px;
-    font-weight: bold;
-}
-
-.gantt-container {
-    background: white;
+.legend-card {
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
 }
 
-.table-card {
-    background: white;
+.legend-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: var(--text-light);
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-darker);
+    border-radius: 4px;
+}
+
+.legend-color {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.legend-name {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+/* Cores da legenda */
+.color-C { background-color: #5B9BD5; color: white; }
+.color-K { background-color: #70AD47; color: white; }
+.color-F { background-color: #0070C0; color: white; }
+.color-M { background-color: #C00000; color: white; }
+.color-T { background-color: #FFC000; color: black; }
+.color-P { background-color: #FF6600; color: white; }
+.color-O { background-color: #000000; color: white; }
+
+.calendar-container {
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.calendar-nav button {
+    background: var(--bg-darker);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.calendar-nav button:hover {
+    background: var(--hover-bg);
+}
+
+.calendar-month {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.calendar-weekday {
+    padding: 10px;
+    text-align: center;
+    background: var(--bg-darker);
+    color: #888;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    min-height: 120px;
+    background: var(--bg-darker);
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.calendar-day:hover {
+    background: var(--hover-bg);
+    border-color: #4a5568;
+}
+
+.calendar-day.other-month {
+    opacity: 0.3;
+}
+
+.day-number {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.day-alocacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.alocacao-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    position: relative;
+}
+
+.alocacao-item:hover {
+    opacity: 0.8;
+}
+
+.alocacao-item .delete-btn {
+    display: none;
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 4px;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.alocacao-item:hover .delete-btn {
+    display: block;
+}
+
+.alocacao-consultor {
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.alocacao-periodo {
+    font-size: 9px;
+    opacity: 0.8;
 }
 
 .modal {
@@ -101,17 +271,18 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.7);
     overflow: auto;
 }
 
 .modal-content {
-    background-color: white;
-    margin: 5% auto;
+    background-color: var(--bg-card);
+    margin: 3% auto;
     padding: 30px;
     border-radius: 8px;
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
+    border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -123,6 +294,7 @@
 
 .modal-header h2 {
     margin: 0;
+    color: var(--text-light);
 }
 
 .close {
@@ -133,7 +305,7 @@
 }
 
 .close:hover {
-    color: #000;
+    color: var(--text-light);
 }
 
 .form-group {
@@ -144,53 +316,76 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
+    color: var(--text-light);
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
+    background: var(--bg-darker);
+    color: var(--text-light);
 }
 
-.periodo-badge {
-    display: inline-block;
-    padding: 4px 8px;
+.day-detail-alocacoes {
+    margin-top: 20px;
+}
+
+.day-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--bg-darker);
     border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
+    border-left: 4px solid;
 }
 
-.periodo-M {
-    background-color: #3498db;
-    color: white;
+.day-detail-info {
+    flex: 1;
 }
 
-.periodo-T {
-    background-color: #e74c3c;
-    color: white;
+.day-detail-actions {
+    display: flex;
+    gap: 8px;
 }
 
-.chart-container {
-    background: white;
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #888;
+}
+
+.stat-card .value {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--text-light);
 }
 </style>
 
 <div class="filters-card">
-    <h3 style="margin-top: 0;">Filtros</h3>
+    <h3 style="margin-top: 0; color: var(--text-light);">Filtros</h3>
     <div class="filter-row">
         <div class="filter-group">
-            <label>Data Início</label>
-            <input type="date" id="dataInicio" onchange="aplicarFiltros()">
-        </div>
-        <div class="filter-group">
-            <label>Data Fim</label>
-            <input type="date" id="dataFim" onchange="aplicarFiltros()">
+            <label>Mês/Ano</label>
+            <input type="month" id="mesAno" onchange="aplicarFiltros()">
         </div>
         <div class="filter-group">
             <label>Consultor</label>
@@ -201,54 +396,75 @@
     </div>
 </div>
 
+<div class="legend-card">
+    <div class="legend-title">SIGLAS / LEGENDA</div>
+    <div class="legend-grid">
+        <div class="legend-item">
+            <div class="legend-color color-C">C-</div>
+            <div class="legend-name">CONSULTORIA</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-K">K-</div>
+            <div class="legend-name">KICK-OFF</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-F">F-</div>
+            <div class="legend-name">REUNIÃO FINAL</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-M">M-</div>
+            <div class="legend-name">MENTORIA</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-T">T-</div>
+            <div class="legend-name">T0 - DIAGNÓSTICO</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-P">P-</div>
+            <div class="legend-name">PROGRAMADO</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color color-O">O-</div>
+            <div class="legend-name">OUTROS</div>
+        </div>
+    </div>
+</div>
+
 <div class="stats-grid">
     <div class="stat-card">
         <h3>Total de Alocações</h3>
         <div class="value" id="totalAlocacoes">0</div>
     </div>
-    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+    <div class="stat-card">
         <h3>Consultores Ativos</h3>
         <div class="value" id="totalConsultores">0</div>
     </div>
-    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-        <h3>Projetos Ativos</h3>
-        <div class="value" id="totalProjetos">0</div>
+    <div class="stat-card">
+        <h3>Dias com Alocação</h3>
+        <div class="value" id="diasAlocados">0</div>
     </div>
 </div>
 
-<div class="gantt-container">
-    <h3 style="margin-top: 0;">Visualização Gantt</h3>
-    <div id="ganttChart"></div>
-</div>
-
-<div class="chart-container">
-    <h3 style="margin-top: 0;">Alocações por Consultor</h3>
-    <div id="consultorChart"></div>
-</div>
-
-<div class="table-card">
-    <h3 style="margin-top: 0;">Lista de Alocações</h3>
-    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Consultor</th>
-                    <th>NIF</th>
-                    <th>Data</th>
-                    <th>Período</th>
-                    <th>Projeto</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="alocacoesTable">
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px;">
-                        <span class="loading-spinner"></span> Carregando...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<div class="calendar-container">
+    <div class="calendar-header">
+        <div class="calendar-nav">
+            <button onclick="mesAnterior()"><i class="fas fa-chevron-left"></i></button>
+            <span class="calendar-month" id="mesAtual">Janeiro 2024</span>
+            <button onclick="proximoMes()"><i class="fas fa-chevron-right"></i></button>
+        </div>
     </div>
+    
+    <div class="calendar-weekdays">
+        <div class="calendar-weekday">DOM</div>
+        <div class="calendar-weekday">SEG</div>
+        <div class="calendar-weekday">TER</div>
+        <div class="calendar-weekday">QUA</div>
+        <div class="calendar-weekday">QUI</div>
+        <div class="calendar-weekday">SEX</div>
+        <div class="calendar-weekday">SÁB</div>
+    </div>
+    
+    <div class="calendar-days" id="calendarDays"></div>
 </div>
 
 <div id="modalNovaAlocacao" class="modal">
@@ -277,8 +493,8 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Código do Projeto</label>
-                <input type="text" id="projetoNovo" placeholder="Ex: C-PRODMEC">
+                <label>Código do Projeto *</label>
+                <input type="text" id="projetoNovo" placeholder="Ex: C-PRODMEC" required>
             </div>
             <div class="form-group">
                 <label>Observação</label>
@@ -291,13 +507,39 @@
         </form>
     </div>
 </div>
+
+<div id="modalEditarDia" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="tituloEditarDia">Editar Dia</h2>
+            <span class="close" onclick="fecharModalEditarDia()">&times;</span>
+        </div>
+        <div id="conteudoEditarDia"></div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
 let alocacoesData = [];
 let consultoresData = [];
+let mesAtual = new Date();
+let dataAtual = '';
+
+function getCorProjeto(codigo) {
+    if (!codigo) return 'color-O';
+    const prefixo = codigo.split('-')[0];
+    const cores = {
+        'C': 'color-C',
+        'K': 'color-K',
+        'F': 'color-F',
+        'M': 'color-M',
+        'T': 'color-T',
+        'P': 'color-P',
+        'O': 'color-O'
+    };
+    return cores[prefixo] || 'color-O';
+}
 
 async function carregarConsultores() {
     try {
@@ -322,122 +564,18 @@ async function carregarConsultores() {
     }
 }
 
-async function carregarEstatisticas() {
-    try {
-        const token = localStorage.getItem('token');
-        const dataInicio = document.getElementById('dataInicio').value;
-        const dataFim = document.getElementById('dataFim').value;
-        
-        let url = '/api/cronogramas/alocacoes/estatisticas';
-        const params = new URLSearchParams();
-        if (dataInicio) params.append('data_inicio', dataInicio);
-        if (dataFim) params.append('data_fim', dataFim);
-        if (params.toString()) url += '?' + params.toString();
-        
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const stats = await response.json();
-        
-        document.getElementById('totalAlocacoes').textContent = stats.total_alocacoes;
-        document.getElementById('totalConsultores').textContent = stats.por_consultor.length;
-        document.getElementById('totalProjetos').textContent = stats.top_projetos.length;
-        
-        renderizarGraficoConsultores(stats.por_consultor);
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
-    }
-}
-
-function renderizarGraficoConsultores(dados) {
-    const data = [{
-        x: dados.map(d => d.nome),
-        y: dados.map(d => d.total),
-        type: 'bar',
-        marker: {
-            color: 'rgb(102, 126, 234)'
-        }
-    }];
-    
-    const layout = {
-        xaxis: { title: 'Consultor' },
-        yaxis: { title: 'Total de Alocações' },
-        margin: { t: 20 }
-    };
-    
-    Plotly.newPlot('consultorChart', data, layout, {responsive: true});
-}
-
-async function carregarDadosGantt() {
-    try {
-        const token = localStorage.getItem('token');
-        const dataInicio = document.getElementById('dataInicio').value;
-        const dataFim = document.getElementById('dataFim').value;
-        
-        let url = '/api/cronogramas/alocacoes/gantt';
-        const params = new URLSearchParams();
-        if (dataInicio) params.append('data_inicio', dataInicio);
-        if (dataFim) params.append('data_fim', dataFim);
-        if (params.toString()) url += '?' + params.toString();
-        
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const ganttData = await response.json();
-        
-        renderizarGantt(ganttData);
-    } catch (error) {
-        console.error('Erro ao carregar dados Gantt:', error);
-    }
-}
-
-function renderizarGantt(dados) {
-    if (dados.length === 0) {
-        document.getElementById('ganttChart').innerHTML = '<p style="text-align: center; color: #999;">Nenhum dado disponível para o período selecionado</p>';
-        return;
-    }
-    
-    const data = [{
-        x: dados.map(d => new Date(d.Start)),
-        y: dados.map(d => d.Task),
-        text: dados.map(d => d.Resource),
-        type: 'scatter',
-        mode: 'markers',
-        marker: {
-            size: 12,
-            color: dados.map(d => d.Periodo === 'M' ? '#3498db' : '#e74c3c')
-        },
-        hovertemplate: '<b>%{y}</b><br>Data: %{x}<br>Projeto: %{text}<extra></extra>'
-    }];
-    
-    const layout = {
-        xaxis: {
-            title: 'Data',
-            type: 'date'
-        },
-        yaxis: {
-            title: 'Consultor - Período'
-        },
-        height: 600,
-        margin: { l: 200, r: 50, t: 20, b: 100 }
-    };
-    
-    Plotly.newPlot('ganttChart', data, layout, {responsive: true});
-}
-
 async function carregarAlocacoes() {
     try {
         const token = localStorage.getItem('token');
-        const dataInicio = document.getElementById('dataInicio').value;
-        const dataFim = document.getElementById('dataFim').value;
+        const ano = mesAtual.getFullYear();
+        const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+        const dataInicio = `${ano}-${mes}-01`;
+        const ultimoDia = new Date(ano, mesAtual.getMonth() + 1, 0).getDate();
+        const dataFim = `${ano}-${mes}-${ultimoDia}`;
         const consultorId = document.getElementById('consultorFiltro').value;
         
-        let url = '/api/cronogramas/alocacoes/listar';
-        const params = new URLSearchParams();
-        if (dataInicio) params.append('data_inicio', dataInicio);
-        if (dataFim) params.append('data_fim', dataFim);
-        if (consultorId) params.append('consultor_id', consultorId);
-        if (params.toString()) url += '?' + params.toString();
+        let url = `/api/cronogramas/alocacoes/listar?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+        if (consultorId) url += `&consultor_id=${consultorId}`;
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -445,53 +583,116 @@ async function carregarAlocacoes() {
         const alocacoes = await response.json();
         alocacoesData = alocacoes;
         
-        renderizarTabelaAlocacoes(alocacoes);
+        renderizarCalendario();
+        atualizarEstatisticas();
     } catch (error) {
         console.error('Erro ao carregar alocações:', error);
-        document.getElementById('alocacoesTable').innerHTML = `
-            <tr><td colspan="6" style="text-align: center; color: #e74c3c;">
-                Erro ao carregar alocações. Tente novamente.
-            </td></tr>
-        `;
     }
 }
 
-function renderizarTabelaAlocacoes(alocacoes) {
-    const tbody = document.getElementById('alocacoesTable');
+function atualizarEstatisticas() {
+    document.getElementById('totalAlocacoes').textContent = alocacoesData.length;
     
-    if (alocacoes.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                Nenhuma alocação encontrada
-            </td></tr>
-        `;
-        return;
+    const consultoresUnicos = new Set(alocacoesData.map(a => a.consultor_id));
+    document.getElementById('totalConsultores').textContent = consultoresUnicos.size;
+    
+    const diasUnicos = new Set(alocacoesData.map(a => a.data));
+    document.getElementById('diasAlocados').textContent = diasUnicos.size;
+}
+
+function renderizarCalendario() {
+    const ano = mesAtual.getFullYear();
+    const mes = mesAtual.getMonth();
+    
+    document.getElementById('mesAtual').textContent = 
+        mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+    
+    const primeiroDia = new Date(ano, mes, 1);
+    const ultimoDia = new Date(ano, mes + 1, 0);
+    const diasNoMes = ultimoDia.getDate();
+    const diaSemanaInicio = primeiroDia.getDay();
+    
+    const calendarDays = document.getElementById('calendarDays');
+    calendarDays.innerHTML = '';
+    
+    // Dias do mês anterior
+    const diasMesAnterior = new Date(ano, mes, 0).getDate();
+    for (let i = diaSemanaInicio - 1; i >= 0; i--) {
+        const dia = diasMesAnterior - i;
+        const cell = criarCelulaDia(dia, true);
+        calendarDays.appendChild(cell);
     }
     
-    tbody.innerHTML = alocacoes.map(alocacao => `
-        <tr>
-            <td>${alocacao.consultor_nome}</td>
-            <td>${alocacao.nif || '-'}</td>
-            <td>${new Date(alocacao.data).toLocaleDateString('pt-BR')}</td>
-            <td><span class="periodo-badge periodo-${alocacao.periodo}">${alocacao.periodo === 'M' ? 'Manhã' : 'Tarde'}</span></td>
-            <td>${alocacao.codigo_projeto || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deletarAlocacao(${alocacao.id})">
-                    <i class="fas fa-trash"></i>
+    // Dias do mês atual
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const data = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const alocacoesDia = alocacoesData.filter(a => a.data === data);
+        const cell = criarCelulaDia(dia, false, data, alocacoesDia);
+        calendarDays.appendChild(cell);
+    }
+    
+    // Dias do próximo mês
+    const totalCelulas = calendarDays.children.length;
+    const celulasRestantes = 35 - totalCelulas;
+    for (let dia = 1; dia <= celulasRestantes; dia++) {
+        const cell = criarCelulaDia(dia, true);
+        calendarDays.appendChild(cell);
+    }
+}
+
+function criarCelulaDia(dia, outroMes, data = null, alocacoes = []) {
+    const cell = document.createElement('div');
+    cell.className = `calendar-day ${outroMes ? 'other-month' : ''}`;
+    
+    if (!outroMes && data) {
+        cell.onclick = () => abrirModalEditarDia(data);
+    }
+    
+    const dayNumber = document.createElement('div');
+    dayNumber.className = 'day-number';
+    dayNumber.textContent = dia;
+    cell.appendChild(dayNumber);
+    
+    if (alocacoes.length > 0) {
+        const dayAlocacoes = document.createElement('div');
+        dayAlocacoes.className = 'day-alocacoes';
+        
+        alocacoes.forEach(alocacao => {
+            const item = document.createElement('div');
+            item.className = `alocacao-item ${getCorProjeto(alocacao.codigo_projeto)}`;
+            item.innerHTML = `
+                <span class="alocacao-consultor" title="${alocacao.consultor_nome}">${alocacao.consultor_nome}</span>
+                <span class="alocacao-periodo">${alocacao.periodo}</span>
+                <button class="delete-btn" onclick="event.stopPropagation(); deletarAlocacao(${alocacao.id})">
+                    <i class="fas fa-times"></i>
                 </button>
-            </td>
-        </tr>
-    `).join('');
+            `;
+            dayAlocacoes.appendChild(item);
+        });
+        
+        cell.appendChild(dayAlocacoes);
+    }
+    
+    return cell;
+}
+
+function mesAnterior() {
+    mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() - 1, 1);
+    carregarAlocacoes();
+}
+
+function proximoMes() {
+    mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + 1, 1);
+    carregarAlocacoes();
 }
 
 function aplicarFiltros() {
+    const mesAnoInput = document.getElementById('mesAno').value;
+    if (mesAnoInput) {
+        const [ano, mes] = mesAnoInput.split('-');
+        mesAtual = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+    }
     carregarAlocacoes();
-    carregarDadosGantt();
-    carregarEstatisticas();
-}
-
-function atualizarCronograma() {
-    aplicarFiltros();
 }
 
 function abrirModalNovaAlocacao() {
@@ -511,7 +712,7 @@ async function salvarNovaAlocacao(event) {
         consultor_id: parseInt(document.getElementById('consultorNovo').value),
         data: document.getElementById('dataNova').value,
         periodo: document.getElementById('periodoNovo').value,
-        codigo_projeto: document.getElementById('projetoNovo').value || null,
+        codigo_projeto: document.getElementById('projetoNovo').value,
         observacao: document.getElementById('observacaoNova').value || null
     };
     
@@ -528,7 +729,7 @@ async function salvarNovaAlocacao(event) {
         if (response.ok) {
             alert('Alocação criada com sucesso!');
             fecharModal();
-            atualizarCronograma();
+            carregarAlocacoes();
         } else {
             const error = await response.json();
             alert('Erro ao criar alocação: ' + (error.detail || 'Erro desconhecido'));
@@ -537,6 +738,68 @@ async function salvarNovaAlocacao(event) {
         console.error('Erro:', error);
         alert('Erro ao criar alocação. Tente novamente.');
     }
+}
+
+function abrirModalEditarDia(data) {
+    dataAtual = data;
+    const alocacoes = alocacoesData.filter(a => a.data === data);
+    
+    const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+    document.getElementById('tituloEditarDia').textContent = `Editar ${dataFormatada}`;
+    
+    let html = `
+        <div class="day-detail-alocacoes">
+            ${alocacoes.length > 0 ? 
+                alocacoes.map(a => `
+                    <div class="day-detail-item" style="border-color: ${getCorBorda(a.codigo_projeto)}">
+                        <div class="day-detail-info">
+                            <strong>${a.consultor_nome}</strong> - ${a.periodo === 'M' ? 'Manhã' : 'Tarde'}<br>
+                            <small>${a.codigo_projeto || 'Sem projeto'}</small>
+                        </div>
+                        <div class="day-detail-actions">
+                            <button class="btn btn-sm btn-danger" onclick="deletarAlocacao(${a.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('') 
+                : '<p style="color: #888;">Nenhuma alocação neste dia</p>'
+            }
+        </div>
+        <div style="margin-top: 20px;">
+            <button class="btn btn-primary" onclick="adicionarAlocacaoNoDia('${data}')">
+                <i class="fas fa-plus"></i> Adicionar Alocação
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('conteudoEditarDia').innerHTML = html;
+    document.getElementById('modalEditarDia').style.display = 'block';
+}
+
+function getCorBorda(codigo) {
+    if (!codigo) return '#888';
+    const prefixo = codigo.split('-')[0];
+    const cores = {
+        'C': '#5B9BD5',
+        'K': '#70AD47',
+        'F': '#0070C0',
+        'M': '#C00000',
+        'T': '#FFC000',
+        'P': '#FF6600',
+        'O': '#000000'
+    };
+    return cores[prefixo] || '#888';
+}
+
+function fecharModalEditarDia() {
+    document.getElementById('modalEditarDia').style.display = 'none';
+}
+
+function adicionarAlocacaoNoDia(data) {
+    document.getElementById('dataNova').value = data;
+    fecharModalEditarDia();
+    abrirModalNovaAlocacao();
 }
 
 async function deletarAlocacao(id) {
@@ -552,7 +815,8 @@ async function deletarAlocacao(id) {
         
         if (response.ok) {
             alert('Alocação deletada com sucesso!');
-            atualizarCronograma();
+            fecharModalEditarDia();
+            carregarAlocacoes();
         } else {
             alert('Erro ao deletar alocação');
         }
@@ -562,18 +826,39 @@ async function deletarAlocacao(id) {
     }
 }
 
+async function exportarPDF() {
+    const token = localStorage.getItem('token');
+    const ano = mesAtual.getFullYear();
+    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    const consultorId = document.getElementById('consultorFiltro').value;
+    
+    let url = `/api/relatorios/cronograma-pdf?ano=${ano}&mes=${mes}`;
+    if (consultorId) url += `&consultor_id=${consultorId}`;
+    
+    window.open(url, '_blank');
+}
+
+async function exportarExcel() {
+    const token = localStorage.getItem('token');
+    const ano = mesAtual.getFullYear();
+    const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
+    const consultorId = document.getElementById('consultorFiltro').value;
+    
+    let url = `/api/relatorios/cronograma-excel?ano=${ano}&mes=${mes}`;
+    if (consultorId) url += `&consultor_id=${consultorId}`;
+    
+    window.open(url, '_blank');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const hoje = new Date();
-    const trintaDiasAtras = new Date(hoje);
-    trintaDiasAtras.setDate(hoje.getDate() - 30);
-    const trintaDiasFrente = new Date(hoje);
-    trintaDiasFrente.setDate(hoje.getDate() + 30);
+    mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     
-    document.getElementById('dataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
-    document.getElementById('dataFim').value = trintaDiasFrente.toISOString().split('T')[0];
+    document.getElementById('mesAno').value = 
+        `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
     
     carregarConsultores();
-    aplicarFiltros();
+    carregarAlocacoes();
 });
 </script>
 {% endblock %}

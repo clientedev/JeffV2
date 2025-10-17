@@ -13,7 +13,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 
 from app.database import get_db
-from app.models.models import Usuario, Proposta, Contrato, Cronograma, Empresa, Consultor
+from app.models.models import Usuario, Proposta, Contrato, Cronograma, Empresa, Consultor, AlocacaoCronograma
 from app.auth import get_current_user
 
 router = APIRouter()
@@ -300,4 +300,155 @@ async def exportar_excel(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename=exportacao_{tipo}.xlsx"}
+    )
+
+@router.get("/cronograma-pdf")
+async def exportar_cronograma_pdf(
+    ano: int,
+    mes: int,
+    consultor_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#1a1f3a'),
+        spaceAfter=30,
+        alignment=1
+    )
+    
+    mes_nome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes-1]
+    title = Paragraph(f"Cronograma de Alocações - {mes_nome}/{ano}", title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 0.3*inch))
+    
+    data_inicio = date(ano, mes, 1)
+    import calendar
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    data_fim = date(ano, mes, ultimo_dia)
+    
+    query = db.query(AlocacaoCronograma).join(Consultor).filter(
+        AlocacaoCronograma.data >= data_inicio,
+        AlocacaoCronograma.data <= data_fim
+    )
+    
+    if consultor_id:
+        query = query.filter(AlocacaoCronograma.consultor_id == consultor_id)
+    
+    alocacoes = query.order_by(AlocacaoCronograma.data, Consultor.nome).all()
+    
+    data = [['Data', 'Consultor', 'Período', 'Projeto']]
+    for a in alocacoes:
+        data.append([
+            a.data.strftime('%d/%m/%Y'),
+            a.consultor.nome[:25] if a.consultor else '-',
+            'Manhã' if a.periodo == 'M' else 'Tarde',
+            a.codigo_projeto or '-'
+        ])
+    
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=cronograma_{mes_nome}_{ano}.pdf"}
+    )
+
+@router.get("/cronograma-excel")
+async def exportar_cronograma_excel(
+    ano: int,
+    mes: int,
+    consultor_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    
+    mes_nome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes-1]
+    ws.title = f"Cronograma {mes_nome}"
+    
+    header_fill = PatternFill(start_color="667eea", end_color="667eea", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    center_align = Alignment(horizontal='center', vertical='center')
+    
+    ws.append([f'Cronograma de Alocações - {mes_nome}/{ano}'])
+    ws.merge_cells('A1:D1')
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = center_align
+    
+    ws.append([])
+    ws.append(['Data', 'Consultor', 'Período', 'Projeto'])
+    
+    data_inicio = date(ano, mes, 1)
+    import calendar
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    data_fim = date(ano, mes, ultimo_dia)
+    
+    query = db.query(AlocacaoCronograma).join(Consultor).filter(
+        AlocacaoCronograma.data >= data_inicio,
+        AlocacaoCronograma.data <= data_fim
+    )
+    
+    if consultor_id:
+        query = query.filter(AlocacaoCronograma.consultor_id == consultor_id)
+    
+    alocacoes = query.order_by(AlocacaoCronograma.data, Consultor.nome).all()
+    
+    for a in alocacoes:
+        ws.append([
+            a.data.strftime('%d/%m/%Y'),
+            a.consultor.nome if a.consultor else '-',
+            'Manhã' if a.periodo == 'M' else 'Tarde',
+            a.codigo_projeto or '-'
+        ])
+    
+    for cell in ws[3]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+    
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=cronograma_{mes_nome}_{ano}.xlsx"}
     )
