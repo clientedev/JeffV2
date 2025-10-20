@@ -44,7 +44,8 @@ app.include_router(linha_educacional.router, prefix="/api/linha-educacional", ta
 
 @app.on_event("startup")
 async def startup_event():
-    init_db()
+    from app.database import ensure_database_setup
+    ensure_database_setup()
     db = next(get_db())
     
     admin_email = os.getenv("ADMIN_EMAIL", "admin@sistema.com")
