@@ -1,0 +1,196 @@
+Quero que você desenvolva um sistema web completo de gerenciamento de empresas e programas com as seguintes regras e requisitos. Tudo abaixo é obrigatório.
+
+1. LOGIN E USUÁRIOS (OBRIGATÓRIO)
+
+Login por e-mail e senha
+
+Autenticação segura com token
+
+Dois tipos de usuário:
+
+ADMIN: vê e edita tudo, cadastra usuários
+
+CONSULTOR: só vê empresas atribuídas a ele
+
+Proteção de rotas privadas
+
+Tela de login obrigatória
+
+2. DASHBOARD (OBRIGATÓRIO)
+
+Mostrar indicadores:
+
+Total de empresas cadastradas
+
+Total de programas em andamento
+
+Percentual de empresas em cada etapa do processo
+
+Total de empresas por consultor
+
+Lista de atividades/empresas com pendências
+
+Área visual com cards e gráficos
+
+Filtros por período e consultor
+
+3. CADASTRO DE EMPRESAS (OBRIGATÓRIO)
+
+Cadastro deve incluir:
+
+Nome da empresa
+
+CNPJ
+
+Linha (Tecnologia ou Educacional)
+
+Tipo de Programa
+
+Porte
+
+ER / Região
+
+Consultor Responsável
+
+Status Atual (etapa)
+
+Observações
+
+Data de cadastro automática
+
+Histórico de atualização
+
+Deve permitir:
+
+Criar, listar, editar e excluir empresas
+
+Pesquisa e filtros por qualquer campo
+
+4. PIPELINE DE ETAPAS (OBRIGATÓRIO)
+
+Cada empresa deve passar pelas etapas abaixo:
+
+Ordem	Etapa
+1	Prospecção
+2	Reunião de Diagnóstico
+3	Proposta / Adesão
+4	Execução
+5	Entregas
+6	Certificação
+7	Finalizado
+
+Requisitos do pipeline:
+
+Deve funcionar como visualização Kanban e também lista
+
+Deve permitir arrastar e soltar entre etapas
+
+Deve registrar data de entrada e data de saída de cada etapa
+
+Alterações devem registrar usuário que fez a mudança
+
+5. RELATÓRIOS (OBRIGATÓRIO)
+
+Filtros por:
+
+Etapa
+
+Linha (Tecnologia/Educacional)
+
+Consultor
+
+Período
+
+Relatórios obrigatórios:
+
+Empresas por consultor
+
+Empresas por etapa
+
+Tempo médio por etapa
+
+Exportação obrigatória:
+
+PDF
+
+Excel
+
+6. AUTOMATIZAÇÕES (OBRIGATÓRIO)
+
+Toda mudança de etapa gera histórico automaticamente
+
+Notificação automática (simulada com log ou popup) quando empresa chegar em:
+
+"Certificação"
+
+"Finalizado"
+
+Registrar empresas paradas há mais de 7 dias em qualquer etapa e exibir alerta no dashboard
+
+7. HISTÓRICO E ANOTAÇÕES (OBRIGATÓRIO)
+
+Cada empresa deve ter:
+
+Histórico de mudanças do pipeline
+
+Registro de ações (quem fez o quê e quando)
+
+Anotações internas por consultor
+
+Upload de documentos (PDF, contratos, relatórios)
+
+8. DESIGN DO SISTEMA (OBRIGATÓRIO)
+
+Interface moderna e responsiva
+
+Layout com menu lateral fixo
+
+Dashboard
+
+Empresas
+
+Consultores
+
+Relatórios
+
+Configurações
+
+Paleta visual neutra (branco, cinza, roxo/laranja para destaque)
+
+9. BANCO DE DADOS (OBRIGATÓRIO)
+
+Criar estrutura com as tabelas:
+
+users
+
+companies
+
+stages (etapas do pipeline)
+
+company_stage_history
+
+notes
+
+attachments
+
+activities/logs
+
+O banco deve permitir crescimento e múltiplos relacionamentos.
+
+10. PRIORIDADES DE ENTREGA (OBRIGATÓRIO)
+
+Implementar na seguinte ordem:
+
+Login + controle de usuários
+
+Cadastro de empresas
+
+Pipeline Kanban
+
+Dashboard
+
+Relatórios
+
+Histórico e automações
+
+Upload de arquivos + notas internas

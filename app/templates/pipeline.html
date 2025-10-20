@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline Kanban - Sistema{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding: 20px;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .kanban-column {
+        min-width: 300px;
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .kanban-column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid;
+    }
+    
+    .kanban-column-title {
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .kanban-column-count {
+        background: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .kanban-cards {
+        flex: 1;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .kanban-card {
+        background: white;
+        border-radius: 6px;
+        padding: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        cursor: move;
+        transition: all 0.2s;
+        border-left: 3px solid;
+    }
+    
+    .kanban-card:hover {
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .kanban-card.dragging {
+        opacity: 0.5;
+    }
+    
+    .kanban-card-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #111827;
+    }
+    
+    .kanban-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 12px;
+        color: #6b7280;
+    }
+    
+    .kanban-card-badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #e5e7eb;
+        font-size: 11px;
+    }
+    
+    .kanban-card-warning {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 8px;
+    }
+    
+    .filter-bar {
+        background: white;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: #6366f1;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #4f46e5;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    
+    .company-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 20px;
+    }
+    
+    .detail-item {
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .detail-value {
+        font-size: 14px;
+        color: #111827;
+        font-weight: 500;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 8px;
+        border-bottom: 1px solid #e5e7eb;
+        margin: 20px 0;
+    }
+    
+    .tab {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-weight: 500;
+        color: #6b7280;
+    }
+    
+    .tab.active {
+        color: #6366f1;
+        border-bottom-color: #6366f1;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .timeline-item {
+        padding: 12px;
+        border-left: 2px solid #e5e7eb;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 16px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #6366f1;
+    }
+    
+    .note-item {
+        padding: 12px;
+        background: #fef3c7;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border-left: 3px solid #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <h1 style="margin: 0; font-size: 20px; font-weight: 700; flex: 1;">Pipeline Kanban</h1>
+    
+    <select id="filterLinha">
+        <option value="">Todas as Linhas</option>
+        <option value="TECNOLOGIA">Tecnologia</option>
+        <option value="EDUCACIONAL">Educacional</option>
+    </select>
+    
+    <input type="text" id="filterConsultor" placeholder="Filtrar por consultor...">
+    
+    <button class="btn btn-primary" onclick="openAddCompanyModal()">
+        <i class="fas fa-plus"></i> Nova Empresa
+    </button>
+</div>
+
+<div class="kanban-board" id="kanbanBoard">
+    <!-- Colunas serão carregadas via JavaScript -->
+</div>
+
+<!-- Modal de Detalhes da Empresa -->
+<div class="modal" id="companyModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="modalTitle" style="margin: 0;">Detalhes da Empresa</h2>
+            <button onclick="closeCompanyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('details')">Detalhes</button>
+            <button class="tab" onclick="switchTab('history')">Histórico</button>
+            <button class="tab" onclick="switchTab('notes')">Anotações</button>
+        </div>
+        
+        <div id="detailsTab" class="tab-content active">
+            <div id="companyDetailsContent"></div>
+        </div>
+        
+        <div id="historyTab" class="tab-content">
+            <div id="historyContent"></div>
+        </div>
+        
+        <div id="notesTab" class="tab-content">
+            <div style="margin-bottom: 16px;">
+                <textarea id="newNoteContent" placeholder="Adicionar nova anotação..." rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                <button class="btn btn-primary" onclick="addNote()" style="margin-top: 8px;">Adicionar Nota</button>
+            </div>
+            <div id="notesContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Adicionar Empresa -->
+<div class="modal" id="addCompanyModal">
+    <div class="modal-content">
+        <h2>Cadastrar Nova Empresa no Pipeline</h2>
+        <form id="addCompanyForm" onsubmit="submitNewCompany(event)">
+            <div class="form-group">
+                <label>CNPJ *</label>
+                <input type="text" id="newCnpj" required>
+            </div>
+            <div class="form-group">
+                <label>Nome da Empresa *</label>
+                <input type="text" id="newNomeEmpresa" required>
+            </div>
+            <div class="form-group">
+                <label>Linha *</label>
+                <select id="newLinha" required>
+                    <option value="">Selecione...</option>
+                    <option value="TECNOLOGIA">Tecnologia</option>
+                    <option value="EDUCACIONAL">Educacional</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Programa</label>
+                <input type="text" id="newTipoPrograma">
+            </div>
+            <div class="form-group">
+                <label>Porte</label>
+                <select id="newPorte">
+                    <option value="">Selecione...</option>
+                    <option value="MEI">MEI</option>
+                    <option value="ME">ME</option>
+                    <option value="EPP">EPP</option>
+                    <option value="MEDIO">Médio</option>
+                    <option value="GRANDE">Grande</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ER / Região</label>
+                <input type="text" id="newErRegiao">
+            </div>
+            <div class="form-group">
+                <label>Consultor Responsável</label>
+                <input type="text" id="newConsultor">
+            </div>
+            <div class="form-group">
+                <label>Etapa Inicial *</label>
+                <select id="newStageId" required>
+                    <!-- Será preenchido via JS -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Número da Proposta</label>
+                <input type="text" id="newNumeroProposta">
+            </div>
+            <div class="form-group">
+                <label>Valor da Proposta</label>
+                <input type="number" step="0.01" id="newValorProposta">
+            </div>
+            <div class="form-group">
+                <label>Observações</label>
+                <textarea id="newObservacoes" rows="3"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeAddCompanyModal()" style="background: #e5e7eb;">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/pipeline.js"></script>
+{% endblock %}

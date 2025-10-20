@@ -53,6 +53,10 @@
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Gestão</div>
+                    <a href="/pipeline" class="nav-item {% if request.path == '/pipeline' %}active{% endif %}">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Pipeline Kanban</span>
+                    </a>
                     <a href="/cronograma" class="nav-item {% if request.path == '/cronograma' %}active{% endif %}">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Cronograma</span>

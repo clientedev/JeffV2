@@ -414,3 +414,100 @@ class Solucao(Base):
     ativo = Column(Boolean, default=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Stage(Base):
+    __tablename__ = "stages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(100), nullable=False, unique=True)
+    descricao = Column(Text)
+    ordem = Column(Integer, nullable=False, unique=True)
+    cor = Column(String(7), default="#6366f1")
+    ativo = Column(Boolean, default=True)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+
+class CompanyPipeline(Base):
+    __tablename__ = "company_pipeline"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cnpj = Column(String(18), nullable=False, index=True)
+    nome_empresa = Column(String(255), nullable=False, index=True)
+    linha = Column(String(100), nullable=False)
+    tipo_programa = Column(String(100))
+    porte = Column(String(50))
+    er_regiao = Column(String(100))
+    consultor_responsavel = Column(String(255))
+    stage_id = Column(Integer, ForeignKey("stages.id"), nullable=False)
+    numero_proposta = Column(String(50))
+    valor_proposta = Column(Numeric(12, 2))
+    data_cadastro = Column(DateTime, default=datetime.utcnow)
+    ultima_atualizacao = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    observacoes = Column(Text)
+    
+    stage = relationship("Stage")
+    historico = relationship("CompanyStageHistory", back_populates="company_pipeline", cascade="all, delete-orphan")
+    notas = relationship("Note", back_populates="company_pipeline", cascade="all, delete-orphan")
+    anexos = relationship("Attachment", back_populates="company_pipeline", cascade="all, delete-orphan")
+
+class CompanyStageHistory(Base):
+    __tablename__ = "company_stage_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_pipeline_id = Column(Integer, ForeignKey("company_pipeline.id"), nullable=False)
+    stage_id = Column(Integer, ForeignKey("stages.id"), nullable=False)
+    data_entrada = Column(DateTime, nullable=False, default=datetime.utcnow)
+    data_saida = Column(DateTime)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    observacao = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    company_pipeline = relationship("CompanyPipeline", back_populates="historico")
+    stage = relationship("Stage")
+    usuario = relationship("Usuario")
+
+class Note(Base):
+    __tablename__ = "notes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_pipeline_id = Column(Integer, ForeignKey("company_pipeline.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    titulo = Column(String(255))
+    conteudo = Column(Text, nullable=False)
+    privada = Column(Boolean, default=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    company_pipeline = relationship("CompanyPipeline", back_populates="notas")
+    usuario = relationship("Usuario")
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_pipeline_id = Column(Integer, ForeignKey("company_pipeline.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    nome_arquivo = Column(String(255), nullable=False)
+    tipo_arquivo = Column(String(100))
+    tamanho_bytes = Column(Integer)
+    caminho_arquivo = Column(String(500), nullable=False)
+    descricao = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    company_pipeline = relationship("CompanyPipeline", back_populates="anexos")
+    usuario = relationship("Usuario")
+
+class Activity(Base):
+    __tablename__ = "activities"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_pipeline_id = Column(Integer, ForeignKey("company_pipeline.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    tipo = Column(String(50), nullable=False)
+    descricao = Column(Text, nullable=False)
+    entidade = Column(String(100))
+    entidade_id = Column(Integer)
+    dados_antes = Column(Text)
+    dados_depois = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    usuario = relationship("Usuario")

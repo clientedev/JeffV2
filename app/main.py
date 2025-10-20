@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional, prospeccao, consultor_detalhes, relatorios_analiticos
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional, prospeccao, consultor_detalhes, relatorios_analiticos, pipeline
 
 app = FastAPI(
     title="Sistema de relacionamento com a industria",
@@ -44,6 +44,7 @@ app.include_router(linha_educacional.router, prefix="/api/linha-educacional", ta
 app.include_router(prospeccao.router, prefix="/api/prospeccao", tags=["Prospecção"])
 app.include_router(consultor_detalhes.router, prefix="/api/consultores", tags=["Consultores Detalhes"])
 app.include_router(relatorios_analiticos.router, prefix="/api/relatorios-analiticos", tags=["Relatórios Analíticos"])
+app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline Kanban"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -139,6 +140,10 @@ async def linha_educacional_page(request: Request):
 @app.get("/consultor-detalhe", response_class=HTMLResponse)
 async def consultor_detalhe_page(request: Request):
     return templates.TemplateResponse("consultor_detalhe.html", {"request": request})
+
+@app.get("/pipeline", response_class=HTMLResponse)
+async def pipeline_page(request: Request):
+    return templates.TemplateResponse("pipeline.html", {"request": request})
 
 @app.get("/health")
 async def health_check():
