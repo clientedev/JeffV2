@@ -1,0 +1,185 @@
+# SYSTEM UPGRADE REQUEST
+# PROJECT: Relacionamento Industrial 1.03
+# FRAMEWORK: Flask + PostgreSQL
+# GOAL: Update and expand the system to match the Excel structure (Controle Geral 3.0_151015.xlsx)
+# CRITICAL: DO NOT RESET, DROP OR RECREATE ANY DATABASE TABLES OR DATA.
+
+################################################################################################
+# RULES - THESE MUST BE RESPECTED STRICTLY
+################################################################################################
+
+1. Never drop or recreate existing tables, routes, or files. 
+2. Never execute DROP TABLE or DROP COLUMN commands.
+3. Only use ALTER TABLE and ADD COLUMN if a column does not exist.
+4. All current data must remain intact after redeploy.
+5. Always check column existence before adding any new ones.
+6. Keep all existing modules and layouts functional.
+7. Fix the login page bug where it keeps loading after login.
+8. Keep PostgreSQL as the main database, connected via .env DATABASE_URL.
+9. Before the app starts, run a safe check: ensure_database_setup() that verifies and adjusts structure without data loss.
+
+################################################################################################
+# BUG FIX - LOGIN
+################################################################################################
+
+- Currently, after login, the page stays loading forever.
+- Review the /login route, Flask-Login integration, redirect, and session handling.
+- After successful login, redirect users to /dashboard.
+- Verify app.secret_key and SESSION_PERMANENT settings.
+- Ensure session is committed properly.
+
+################################################################################################
+# SECTIONS THAT MUST NOT BE CHANGED
+################################################################################################
+
+Do not modify or restructure the following modules. Keep them exactly as they are:
+- Cronograma
+- Empresas
+- Contratos
+- Linha Educacional
+- Linha Tecnológica
+
+These modules are complete and functional. Only ensure compatibility with any new logic.
+
+################################################################################################
+# SECTIONS TO UPDATE OR EXPAND
+################################################################################################
+
+## DASHBOARD
+Integrate dashboard metrics using data from the Excel sheets:
+- Propostas Ativas
+- Fechadas no Mês
+- Taxa de Conversão
+- Receita Mensal
+
+Add charts:
+- Propostas por Status
+- Propostas por Consultor
+- Receita Mensal
+- Produtividade por Consultor
+
+Data sources: Prospecção, CARTEIRA GRM, Ordem interna, SOLUÇÕES, SAP TEC, EDU-ME-EPP.
+
+Keep existing layout and styling. Only connect the real data dynamically.
+
+-----------------------------------------------------------------------------------------------
+
+## CONTATOS
+- Base data: “Contatos” sheet.
+- Maintain existing structure.
+- Enable Excel import with validation.
+- Prevent duplication (normalize CNPJ, e-mails).
+- Add filters for Empresa and Cargo.
+
+-----------------------------------------------------------------------------------------------
+
+## PROSPECÇÃO
+- Merge data logic from “Prospecção”, “Follow-Up”, and “Histórico Prosp”.
+- Implement a pipeline system (Novo, Em andamento, Concluído, Perdido).
+- Each stage should be updated in real-time.
+- Add modal for new follow-up entries (date, responsible, notes).
+- Store all records in PostgreSQL, preserving all existing entries.
+- Optional: simple Kanban-style visualization.
+
+-----------------------------------------------------------------------------------------------
+
+## CONSULTOR
+- Add page with consultant performance metrics:
+  - Number of active proposals
+  - Conversion rate
+  - Accumulated revenue
+  - Companies served
+- Filter automatically by the logged-in user.
+
+-----------------------------------------------------------------------------------------------
+
+## RELATÓRIOS
+- Generate analytical dashboards using:
+  - “Pesquisa de Satisfação”, “Forms - Pesquisa de Satisfação”, “PESQUISA” for satisfaction rates.
+  - “CARTEIRA GRM”, “B+P25”, “POTENCIALIZZE” for performance analysis.
+  - “Ordem interna”, “SAP TEC”, “EDU-ME-EPP”, “EDU-DEMAIS” for financial data.
+- Use Chart.js or Plotly for interactive charts.
+- Allow CSV and PDF export of reports.
+
+-----------------------------------------------------------------------------------------------
+
+## ASSISTENTE INTELIGENTE (AI)
+Integrate the current “Assistente Inteligente” component with real data queries.
+
+The AI assistant must understand and answer natural language queries, such as:
+- “Quais contratos vencem esta semana?”
+- “Quantas empresas novas entraram este mês?”
+- “Qual consultor tem maior taxa de conversão?”
+Use SQL queries and filters connected to the existing PostgreSQL database.
+
+-----------------------------------------------------------------------------------------------
+
+## IMPORTAÇÃO DE PLANILHAS
+Add or adjust an import route (/importar) for structured .xlsx files (like “Controle Geral 3.0_151015.xlsx”):
+- Validate column names automatically.
+- Normalize CNPJ, CPF, and phone numbers.
+- Update existing records without overwriting data.
+- Insert only new entries.
+- Show import summary with counts of updated and ignored records.
+
+-----------------------------------------------------------------------------------------------
+
+## LOGIN AND PERMISSIONS
+- Fix login bug and ensure redirection works.
+- Maintain Flask-Login integration.
+- Add user roles:
+  - Admin: full access
+  - Consultor: access to own clients and proposals
+  - Viewer: access to dashboard and reports only
+- Ensure sessions persist safely and logout clears properly.
+
+-----------------------------------------------------------------------------------------------
+
+## BI INTEGRATION
+Prepare secure REST endpoints for Power BI or Metabase connections:
+- Allow real-time queries for indicators and performance metrics.
+- Support JSON or CSV responses.
+- Add scheduled data refresh if possible.
+
+-----------------------------------------------------------------------------------------------
+
+## STARTUP CHECK
+Before the Flask app starts:
+1. Run ensure_database_setup().
+2. Verify missing tables or columns and create them if needed.
+3. Never delete or overwrite existing data.
+4. Log all schema checks to console for transparency.
+
+-----------------------------------------------------------------------------------------------
+
+## TECHNOLOGIES (Keep as is)
+- Backend: Flask + SQLAlchemy
+- Database: PostgreSQL
+- Frontend: Tailwind + JS
+- Auth: Flask-Login
+- Reports: Chart.js or Plotly
+- File uploads: Flask-Uploads
+- Migrations: Alembic (conditional migrations only)
+
+-----------------------------------------------------------------------------------------------
+
+## EXPECTED RESULT
+
+- Login working properly.
+- No data loss after redeploy.
+- Dashboard connected to real metrics.
+- Reports generated automatically.
+- Excel import functional and safe.
+- Existing pages untouched and working.
+- BI connection endpoints ready.
+
+-----------------------------------------------------------------------------------------------
+
+# IMPORTANT FINAL NOTE:
+The update must be backward compatible. 
+All current data, tables, and UI elements must remain intact.
+The focus is on integrating the Excel data model, fixing login, and adding analytics without breaking or deleting anything.
+
+################################################################################################
+# END OF PROMPT
+################################################################################################
