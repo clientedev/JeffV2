@@ -262,3 +262,94 @@ class LinhaEducacional(Base):
     dados_iniciais = Column(Boolean, default=False)  # Marca se é dado inicial fixo
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Prospeccao(Base):
+    __tablename__ = "prospeccao"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    empresa = Column(String(255), nullable=False, index=True)
+    cnpj = Column(String(18), index=True)
+    porte = Column(String(50))
+    er = Column(String(100))
+    contato = Column(String(255))
+    cargo = Column(String(100))
+    email = Column(String(255))
+    celular = Column(String(20))
+    telefone = Column(String(20))
+    tipo_programa = Column(String(100))
+    status = Column(String(50), default='Novo')  # Novo, Em andamento, Concluído, Perdido
+    responsavel = Column(String(255))
+    data_ligacao = Column(Date)
+    oportunidade = Column(String(500))
+    observacoes = Column(Text)
+    dados_iniciais = Column(Boolean, default=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamento
+    followups = relationship("FollowUp", back_populates="prospeccao", cascade="all, delete-orphan")
+
+class FollowUp(Base):
+    __tablename__ = "followups"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    prospeccao_id = Column(Integer, ForeignKey("prospeccao.id"), nullable=False, index=True)
+    data = Column(DateTime, nullable=False, default=datetime.utcnow)
+    responsavel = Column(String(255))
+    tipo = Column(String(50))  # Ligação, Email, Reunião, WhatsApp
+    descricao = Column(Text)
+    proximo_contato = Column(Date)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    # Relacionamento
+    prospeccao = relationship("Prospeccao", back_populates="followups")
+
+class CarteiraGRM(Base):
+    __tablename__ = "carteira_grm"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cnpj = Column(String(18), index=True)
+    empresa = Column(String(255), index=True)
+    porte = Column(String(50))
+    proposta = Column(String(50))
+    solucao = Column(String(500))
+    consultor = Column(String(255))
+    data_inicio = Column(Date)
+    data_termino = Column(Date)
+    ch = Column(String(50))
+    valor = Column(Numeric(12, 2))
+    status = Column(String(100))
+    dados_iniciais = Column(Boolean, default=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class PesquisaSatisfacao(Base):
+    __tablename__ = "pesquisas_satisfacao"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cnpj = Column(String(18), index=True)
+    empresa = Column(String(255), index=True)
+    numero_proposta = Column(String(50))
+    data_resposta = Column(Date)
+    nota_geral = Column(Numeric(3, 1))
+    nota_consultoria = Column(Numeric(3, 1))
+    nota_consultor = Column(Numeric(3, 1))
+    recomendaria = Column(String(10))  # Sim, Não
+    comentarios = Column(Text)
+    dados_iniciais = Column(Boolean, default=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+
+class Solucao(Base):
+    __tablename__ = "solucoes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    categoria = Column(String(255))
+    subgrupo = Column(String(255))
+    titulo = Column(String(500), nullable=False)
+    etapa = Column(String(100))
+    horas_me = Column(Integer)
+    horas_epp = Column(Integer)
+    estrategia = Column(String(50))  # Presencial, Remoto, Híbrido
+    ativo = Column(Boolean, default=True)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
