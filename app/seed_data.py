@@ -215,19 +215,36 @@ def importar_empresas(db: Session):
     try:
         logger.info("Importando empresas...")
         
-        # Verifica se já existem empresas
-        if db.query(Empresa).first():
+        # Verifica se já existem empresas iniciais
+        if db.query(Empresa).filter(Empresa.dados_iniciais == True).first():
             logger.info("Empresas já foram importadas anteriormente. Pulando...")
             return
         
         df = pd.read_excel('attached_assets/empresas_1760980485597.xlsx')
         
+        # Buscar todos os CNPJs existentes de uma vez
+        cnpjs_existentes = {e.cnpj for e in db.query(Empresa.cnpj).all()}
+        
         empresas_adicionadas = 0
+        cnpjs_processados = set()
+        cnpjs_duplicados = 0
+        
         for _, row in df.iterrows():
             try:
                 cnpj = safe_str(row.get('CNPJ'), 18)
                 if not cnpj:
                     continue
+                
+                # Pular CNPJs duplicados dentro da planilha
+                if cnpj in cnpjs_processados:
+                    cnpjs_duplicados += 1
+                    continue
+                
+                # Pular CNPJs que já existem no banco
+                if cnpj in cnpjs_existentes:
+                    continue
+                
+                cnpjs_processados.add(cnpj)
                     
                 empresa = Empresa(
                     cnpj=cnpj,
@@ -248,16 +265,23 @@ def importar_empresas(db: Session):
                     tipo_empresa=safe_str(row.get('TIPO DE EMPRESA'), 100),
                     cadastro_atualizacao=safe_date(row.get('CADASTRO / ATUALIZAÇÃO')),
                     num_funcionarios=safe_int(row.get('Nº FUNC.')),
-                    observacao=safe_str(row.get('Observação'))
+                    observacao=safe_str(row.get('Observação')),
+                    dados_iniciais=True
                 )
                 db.add(empresa)
                 empresas_adicionadas += 1
+                
+                # Commit a cada 100 empresas
+                if empresas_adicionadas % 100 == 0:
+                    db.commit()
+                    logger.info(f"{empresas_adicionadas} empresas importadas até agora...")
+                    
             except Exception as e:
                 logger.error(f"Erro ao importar empresa: {e}")
                 continue
         
         db.commit()
-        logger.info(f"{empresas_adicionadas} empresas importadas com sucesso!")
+        logger.info(f"{empresas_adicionadas} empresas importadas com sucesso! ({cnpjs_duplicados} CNPJs duplicados ignorados)")
         
     except Exception as e:
         logger.error(f"Erro ao importar empresas: {e}")
@@ -268,8 +292,8 @@ def importar_consultores(db: Session):
     try:
         logger.info("Importando consultores...")
         
-        # Verifica se já existem consultores
-        if db.query(Consultor).first():
+        # Verifica se já existem consultores iniciais
+        if db.query(Consultor).filter(Consultor.dados_iniciais == True).first():
             logger.info("Consultores já foram importados anteriormente. Pulando...")
             return
         
@@ -295,7 +319,8 @@ def importar_consultores(db: Session):
                     email=email,
                     nif=nif,
                     cargo="Consultor",
-                    ativo=True
+                    ativo=True,
+                    dados_iniciais=True
                 )
                 db.add(consultor)
                 consultores_adicionados += 1
@@ -315,8 +340,8 @@ def importar_alocacoes_cronograma(db: Session):
     try:
         logger.info("Importando alocações do cronograma...")
         
-        # Verifica se já existem alocações
-        if db.query(AlocacaoCronograma).first():
+        # Verifica se já existem alocações iniciais
+        if db.query(AlocacaoCronograma).filter(AlocacaoCronograma.dados_iniciais == True).first():
             logger.info("Alocações já foram importadas anteriormente. Pulando...")
             return
         
@@ -365,7 +390,8 @@ def importar_alocacoes_cronograma(db: Session):
                             data=data_obj,
                             periodo='M',
                             codigo_projeto=safe_str(codigo_manha, 100),
-                            nif=None
+                            nif=None,
+                            dados_iniciais=True
                         )
                         db.add(alocacao)
                         alocacoes_adicionadas += 1
@@ -382,7 +408,8 @@ def importar_alocacoes_cronograma(db: Session):
                                 data=data_obj,
                                 periodo='T',
                                 codigo_projeto=safe_str(codigo_tarde, 100),
-                                nif=None
+                                nif=None,
+                                dados_iniciais=True
                             )
                             db.add(alocacao)
                             alocacoes_adicionadas += 1

@@ -49,6 +49,7 @@ class Empresa(Base):
     observacao = Column(Text)
     segmento = Column(String(255))
     regiao = Column(String(100))
+    dados_iniciais = Column(Boolean, default=False)
     criado_em = Column(DateTime, default=datetime.utcnow)
     
     # Relacionamentos
@@ -63,6 +64,7 @@ class Consultor(Base):
     nif = Column(String(50), unique=True, index=True)
     cargo = Column(String(100))
     ativo = Column(Boolean, default=True)
+    dados_iniciais = Column(Boolean, default=False)
     criado_em = Column(DateTime, default=datetime.utcnow)
     
     # Relacionamentos
@@ -160,6 +162,7 @@ class AlocacaoCronograma(Base):
     codigo_projeto = Column(String(100))  # Ex: C-PRODMEC, K-KAMAPRI2
     nif = Column(String(50))  # Número de identificação do consultor
     observacao = Column(Text)
+    dados_iniciais = Column(Boolean, default=False)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
