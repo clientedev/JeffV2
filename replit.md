@@ -2,7 +2,9 @@
 
 ## Overview
 
-This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms by tracking client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities. The system now includes advanced prospecting with follow-ups, detailed consultant performance metrics, an improved internal assistant, and comprehensive analytical reports.
+This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms by tracking client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities. 
+
+**Latest Update (October 2025)**: The system now includes two complete business lines (Linha Tecnologia and Linha Educacional) with full CRUD operations, advanced filtering, pagination, and consolidated dashboard statistics. The system manages 2,940 technology records and 266 educational records imported from Excel spreadsheets with 120+ and 42 columns respectively.
 
 ## User Preferences
 
@@ -29,9 +31,27 @@ Preferred communication style: Simple, everyday language.
 **Core Entities**: Usuario, Empresa, Consultor, Proposta, Cronograma, AlocacaoCronograma, Contrato, Feriado, Contato, LinhaTecnologia, LinhaEducacional.
 **Relationships**: One-to-Many relationships exist between core entities (e.g., Empresa to Propostas). Consultant allocations are tracked daily. Initial data imported from Excel is marked `dados_iniciais=True` and protected from modification via API.
 
+### Business Lines (Linhas de Negócio)
+
+**Linha Tecnologia**: Complete management of technology programs with 120 database columns including empresa, CNPJ, numero_proposta, consultor, valor_proposta, situacao, status_etapa, solucao, ano, mes, and extensive tracking fields. Supports advanced filtering by empresa, consultor, situacao, ano, mes, and status_etapa with full pagination (25/50/100 records per page).
+
+**Linha Educacional**: Complete management of educational programs with 42 database columns including empresa, CNPJ, programa, consultor, valor, situacao, status_proposta, ano, mes, and tracking fields. Supports advanced filtering by empresa, consultor, situacao, ano, mes, and status_proposta with full pagination.
+
+**Data Volume**: 2,940 technology records and 266 educational records successfully imported and managed.
+
 ### API Structure
 
 **RESTful Endpoints** are organized by domain, including `/api/login`, `/api/empresas`, `/api/consultores`, `/api/propostas`, `/api/cronogramas`, `/api/contratos`, `/api/contatos`, `/api/linha-tecnologia`, `/api/linha-educacional`, `/api/bi`, `/api/importacao`, `/api/chatbot`, `/api/relatorios`, and `/api/alertas`.
+
+**Business Lines API Features**:
+- Full CRUD operations (GET, POST, PUT, DELETE)
+- Advanced filtering (empresa, consultor, situacao, ano, mes, status)
+- Pagination support (page, page_size parameters)
+- Statistics endpoints returning filtered counts
+- Excel export with applied filters
+- Dynamic filter options (years, consultants, statuses)
+- Protected deletion for seed data (dados_iniciais=True)
+
 **Design Patterns**: Dependency injection for database sessions and authentication, Pydantic schemas for type safety, and consistent error handling.
 
 ### Alert System
