@@ -1,0 +1,123 @@
+1. Login e Controle de Acesso
+
+O sistema possui tela de login com e-mail e senha.
+
+Após a autenticação, o usuário é redirecionado para o Dashboard.
+
+Os acessos são divididos em:
+
+Administrador: pode gerenciar usuários, permissões e relatórios.
+
+Consultor: acessa apenas suas empresas e propostas.
+
+Visualizador: apenas lê os dados, sem editar.
+
+O problema atual de o login “ficar carregando” será corrigido.
+
+O login utiliza Flask-Login com sessões seguras.
+
+2. Dashboard (Painel Principal)
+
+Exibe indicadores e gráficos:
+
+Propostas abertas, concluídas, taxa de conversão, faturamento mensal.
+
+Desempenho por consultor e tipo de solução.
+
+Os gráficos usam Chart.js ou Plotly.
+
+Os dados vêm do banco PostgreSQL, alimentado pelas planilhas importadas.
+
+Objetivo: fornecer uma visão rápida da situação geral e do desempenho das equipes.
+
+3. Empresas e Contatos
+
+Contém todas as empresas e contatos importados das planilhas.
+
+Permite cadastrar e editar registros.
+
+Valida automaticamente CNPJ e e-mail para evitar duplicações.
+
+Possui filtros por cidade, consultor e status.
+
+Permite importar novas planilhas sem apagar dados existentes.
+
+Objetivo: substituir as planilhas por um banco unificado de empresas e contatos.
+
+4. Prospecção e Follow-up
+
+Consolida os dados das abas Prospecção, Follow-up e Histórico Prosp.
+
+Cada proposta segue um funil de vendas:
+
+Novo → Em andamento → Fechado → Perdido.
+
+Permite registrar novos follow-ups com data, observação e responsável.
+
+Exibição opcional em formato Kanban para fácil movimentação das propostas.
+
+Objetivo: controlar e visualizar o ciclo completo das oportunidades comerciais.
+
+5. Consultores
+
+Página individual para cada consultor com:
+
+Quantidade de propostas abertas e concluídas.
+
+Taxa de conversão.
+
+Receita gerada.
+
+Lista de empresas sob sua responsabilidade.
+
+O sistema filtra automaticamente os dados de acordo com o usuário logado.
+
+Objetivo: acompanhar resultados e desempenho individual.
+
+6. Relatórios Analíticos
+
+Gera relatórios automáticos e filtráveis por período, consultor, tipo de solução ou status.
+
+Fontes principais:
+
+Pesquisa de Satisfação.
+
+CARTEIRA GRM, POTENCIALIZZE.
+
+SAP TEC, EDU-ME-EPP, EDU-DEMAIS.
+
+Permite exportar relatórios em CSV ou PDF.
+
+Objetivo: oferecer dados consolidados e confiáveis para tomada de decisão.
+
+7. Importação de Planilhas
+
+Rota específica para importar planilhas Excel (como o arquivo “Controle Geral 3.0”).
+
+O sistema:
+
+Lê o arquivo.
+
+Identifica as abas e colunas automaticamente.
+
+Atualiza registros já existentes.
+
+Adiciona novos registros sem sobrescrever dados antigos.
+
+Gera um resumo da importação com os resultados.
+
+Objetivo: atualizar o banco sem riscos de perda de informações.
+
+8. Assistente Interno
+
+Interface de chat dentro do painel.
+
+O usuário pode digitar perguntas sobre os dados, como:
+
+“Quantos contratos foram fechados este mês?”
+
+“Quais empresas estão sem follow-up há mais de 30 dias?”
+
+O sistema traduz a pergunta em uma consulta SQL e exibe a resposta de forma simples.
+
+Objetivo: facilitar consultas rápidas sem depender de planilhas ou relatórios manuais.

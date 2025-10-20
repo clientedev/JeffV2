@@ -8,6 +8,7 @@ class FuncaoUsuario(str, enum.Enum):
     ADMIN = "Admin"
     CONSULTOR = "Consultor"
     FINANCEIRO = "Financeiro"
+    VISUALIZADOR = "Visualizador"
 
 class Usuario(Base):
     __tablename__ = "usuarios"

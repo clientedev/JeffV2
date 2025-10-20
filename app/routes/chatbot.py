@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 from datetime import date, timedelta
 import os
 
@@ -11,11 +12,21 @@ from app.auth import get_current_user
 router = APIRouter()
 
 class ChatRequest(BaseModel):
-    mensagem: str
+    pergunta: Optional[str] = None
+    mensagem: Optional[str] = None  # Mantém compatibilidade com frontend existente
 
 class ChatResponse(BaseModel):
     resposta: str
     dados: dict = {}
+
+# Tentar importar OpenAI se disponível
+try:
+    from openai import OpenAI
+    OPENAI_DISPONIVEL = True
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+except (ImportError, Exception):
+    OPENAI_DISPONIVEL = False
+    client = None
 
 @router.post("/perguntar", response_model=ChatResponse)
 async def chat_perguntar(
@@ -23,7 +34,11 @@ async def chat_perguntar(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    mensagem = chat.mensagem.lower()
+    # Aceita tanto 'pergunta' quanto 'mensagem' para compatibilidade
+    pergunta = chat.pergunta or chat.mensagem
+    if not pergunta:
+        raise HTTPException(status_code=400, detail="Pergunta ou mensagem é obrigatória")
+    mensagem = pergunta.lower()
     
     if "contrato" in mensagem and ("venc" in mensagem or "próximo" in mensagem or "semana" in mensagem):
         hoje = date.today()
@@ -131,6 +146,52 @@ async def chat_perguntar(
         )
     
     else:
+        # Se OpenAI estiver disponível, usar para responder perguntas mais complexas
+        if OPENAI_DISPONIVEL and client and os.getenv("OPENAI_API_KEY"):
+            try:
+                # Coletar contexto do banco de dados
+                total_propostas = db.query(Proposta).count()
+                total_empresas = db.query(Empresa).count()
+                total_consultores = db.query(Consultor).count()
+                
+                contexto = f"""
+                Você é um assistente de um sistema de gestão industrial. 
+                O sistema atualmente possui:
+                - {total_propostas} propostas cadastradas
+                - {total_empresas} empresas
+                - {total_consultores} consultores ativos
+                
+                Responda de forma objetiva e útil à seguinte pergunta do usuário:
+                {pergunta}
+                
+                Se a pergunta não for relacionada ao sistema, responda educadamente que você só pode ajudar com questões do sistema de gestão.
+                """
+                
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "Você é um assistente útil para um sistema de gestão industrial."},
+                        {"role": "user", "content": contexto}
+                    ],
+                    max_tokens=500,
+                    temperature=0.7
+                )
+                
+                resposta_ai = response.choices[0].message.content
+                
+                return ChatResponse(
+                    resposta=resposta_ai,
+                    dados={
+                        "total_propostas": total_propostas,
+                        "total_empresas": total_empresas,
+                        "total_consultores": total_consultores
+                    }
+                )
+            except Exception as e:
+                print(f"Erro ao consultar OpenAI: {e}")
+                # Fallback para resposta padrão
+                pass
+        
         return ChatResponse(
             resposta="Desculpe, não entendi sua pergunta. Tente perguntar sobre: contratos vencendo, projetos ativos, propostas paradas ou receita.",
             dados={}

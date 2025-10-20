@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional, prospeccao, consultor_detalhes, relatorios_analiticos
 
 app = FastAPI(
     title="Sistema de relacionamento com a industria",
@@ -41,6 +41,9 @@ app.include_router(alertas.router, prefix="/api/alertas", tags=["Alertas"])
 app.include_router(contatos.router, prefix="/api/contatos", tags=["Contatos"])
 app.include_router(linha_tecnologia.router, prefix="/api/linha-tecnologia", tags=["Linha Tecnologia"])
 app.include_router(linha_educacional.router, prefix="/api/linha-educacional", tags=["Linha Educacional"])
+app.include_router(prospeccao.router, prefix="/api/prospeccao", tags=["Prospecção"])
+app.include_router(consultor_detalhes.router, prefix="/api/consultores", tags=["Consultores Detalhes"])
+app.include_router(relatorios_analiticos.router, prefix="/api/relatorios-analiticos", tags=["Relatórios Analíticos"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -132,6 +135,10 @@ async def linha_tecnologia_page(request: Request):
 @app.get("/linha-educacional", response_class=HTMLResponse)
 async def linha_educacional_page(request: Request):
     return templates.TemplateResponse("linha_educacional.html", {"request": request})
+
+@app.get("/consultor-detalhe", response_class=HTMLResponse)
+async def consultor_detalhe_page(request: Request):
+    return templates.TemplateResponse("consultor_detalhe.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

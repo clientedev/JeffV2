@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Consultor - Sistema de Gestão{% endblock %}
+{% block page_title %}<span id="consultorNome">Consultor</span>{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total de Propostas</div>
+        <div class="stat-value" id="total_propostas">0</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Propostas Abertas</div>
+        <div class="stat-value" id="propostas_abertas">0</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Propostas Concluídas</div>
+        <div class="stat-value" id="propostas_concluidas">0</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Taxa de Conversão</div>
+        <div class="stat-value" id="taxa_conversao">0%</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Receita Gerada</h3>
+        </div>
+        <div style="padding: 24px;">
+            <div style="font-size: 32px; font-weight: 600; color: var(--accent-success);" id="receita_gerada">R$ 0,00</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Horas Trabalhadas</h3>
+        </div>
+        <div style="padding: 24px;">
+            <div style="font-size: 32px; font-weight: 600; color: var(--accent-info);" id="horas_trabalhadas">0h</div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">Empresas sob Responsabilidade</h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CNPJ</th>
+                </tr>
+            </thead>
+            <tbody id="empresasTable">
+                <tr>
+                    <td colspan="2" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Propostas Recentes</h3>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Proposta</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody id="propostasTable">
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px;">
+                        <span class="loading-spinner"></span> Carregando...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_URL = '/api';
+
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function getHeaders() {
+    return {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+    };
+}
+
+function getConsultorIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+}
+
+async function carregarDetalhesConsultor() {
+    const consultorId = getConsultorIdFromURL();
+    if (!consultorId) {
+        alert('ID do consultor não fornecido');
+        window.location.href = '/consultores';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/consultores/${consultorId}/detalhes`, {
+            headers: getHeaders()
+        });
+        
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar detalhes');
+        }
+        
+        const data = await response.json();
+        
+        // Atualizar título
+        document.getElementById('consultorNome').textContent = data.consultor.nome;
+        
+        // Atualizar estatísticas
+        document.getElementById('total_propostas').textContent = data.estatisticas.total_propostas;
+        document.getElementById('propostas_abertas').textContent = data.estatisticas.propostas_abertas;
+        document.getElementById('propostas_concluidas').textContent = data.estatisticas.propostas_concluidas;
+        document.getElementById('taxa_conversao').textContent = `${data.estatisticas.taxa_conversao}%`;
+        document.getElementById('receita_gerada').textContent = `R$ ${data.estatisticas.receita_gerada.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('horas_trabalhadas').textContent = `${data.estatisticas.horas_trabalhadas.toFixed(1)}h`;
+        
+        // Exibir empresas
+        const empresasTable = document.getElementById('empresasTable');
+        if (data.empresas.length === 0) {
+            empresasTable.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 40px;">Nenhuma empresa encontrada</td></tr>';
+        } else {
+            empresasTable.innerHTML = data.empresas.map(e => `
+                <tr>
+                    <td>${e.nome}</td>
+                    <td>${e.cnpj || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Exibir propostas recentes
+        const propostasTable = document.getElementById('propostasTable');
+        if (data.propostas_recentes.length === 0) {
+            propostasTable.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Nenhuma proposta encontrada</td></tr>';
+        } else {
+            propostasTable.innerHTML = data.propostas_recentes.map(p => {
+                let statusClass = 'badge-primary';
+                if (p.status === 'Fechado') statusClass = 'badge-success';
+                else if (p.status === 'Perdido') statusClass = 'badge-danger';
+                
+                return `
+                    <tr>
+                        <td>${p.numero_proposta || '-'}</td>
+                        <td><span class="badge ${statusClass}">${p.status}</span></td>
+                        <td>R$ ${p.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td>${p.data_proposta ? new Date(p.data_proposta).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar detalhes do consultor');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    carregarDetalhesConsultor();
+});
+</script>
+{% endblock %}
