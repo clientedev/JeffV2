@@ -38,7 +38,7 @@ function logout() {
 
 async function carregarDashboard() {
     try {
-        const response = await fetch(`${API_URL}/bi/dashboard/`, {
+        const response = await fetch(`${API_URL}/bi/dashboard`, {
             headers: getHeaders()
         });
         
@@ -63,10 +63,10 @@ async function carregarDashboard() {
 async function carregarGraficos() {
     try {
         const [propostaStatus, receitaMensal, consultores, produtividade] = await Promise.all([
-            fetch(`${API_URL}/bi/propostas-por-status/`, { headers: getHeaders() }).then(r => r.json()),
-            fetch(`${API_URL}/bi/receita-mensal/`, { headers: getHeaders() }).then(r => r.json()),
-            fetch(`${API_URL}/bi/propostas-por-consultor/`, { headers: getHeaders() }).then(r => r.json()),
-            fetch(`${API_URL}/bi/produtividade-consultores/`, { headers: getHeaders() }).then(r => r.json())
+            fetch(`${API_URL}/bi/propostas-por-status`, { headers: getHeaders() }).then(r => r.json()),
+            fetch(`${API_URL}/bi/receita-mensal`, { headers: getHeaders() }).then(r => r.json()),
+            fetch(`${API_URL}/bi/propostas-por-consultor`, { headers: getHeaders() }).then(r => r.json()),
+            fetch(`${API_URL}/bi/produtividade-consultores`, { headers: getHeaders() }).then(r => r.json())
         ]);
         
         // Gráfico de Propostas por Status (Pizza)

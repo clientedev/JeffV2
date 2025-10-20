@@ -205,9 +205,16 @@ class LoginRequest(BaseModel):
     email: EmailStr
     senha: str
 
+class TokenUser(BaseModel):
+    id: int
+    nome: str
+    email: str
+    funcao: str
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: TokenUser
 
 class ImportacaoResponse(BaseModel):
     sucesso: bool
