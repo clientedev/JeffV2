@@ -10,6 +10,32 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Importação Completa de Dados (October 20, 2025)
+Implementado sistema completo de importação de dados permanentes das planilhas Excel com proteção contra perda em redeploy:
+
+**Dados Importados**:
+- 993 Empresas da planilha empresas.xlsx (15 CNPJs duplicados ignorados)
+- 20 Consultores extraídos do cronograma
+- 4967 Alocações de Cronograma (manhã/tarde por consultor)
+- 266 Registros da Linha Educacional (corrigido mapeamento de colunas)
+- 2940 Registros da Linha Tecnologia
+- 3003 Contatos
+
+**Modificações no Banco de Dados**:
+- Adicionado campo `dados_iniciais` (Boolean) aos modelos Empresa, Consultor e AlocacaoCronograma
+- Todos os dados importados das planilhas são marcados com `dados_iniciais=True`
+- Sistema verifica flag `dados_iniciais` antes de reimportar, evitando duplicatas
+
+**Otimizações no seed_data.py**:
+- Importação otimizada de empresas com batch commits (100 empresas por vez)
+- Detecção de CNPJs duplicados na planilha (15 encontrados e ignorados)
+- Cache de CNPJs existentes em memória para evitar queries repetidas
+- Logs informativos de progresso durante importação
+- Tratamento robusto de erros sem perda de dados válidos
+
+**Interface**:
+- Corrigido tema escuro na página Empresas (contador de registros agora com fundo #2a2a2a)
+
 ### Cronograma Visual em Calendário (October 17, 2025)
 Implementado sistema completo de cronograma visual de alocações de consultores em formato de calendário mensal:
 
