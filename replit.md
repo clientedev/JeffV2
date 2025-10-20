@@ -1,246 +1,76 @@
-# Sistema de relacionamento com a industria 1.03
+# Sistema de relacionamento com a industria
 
 ## Overview
 
-This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms that need to track client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities.
+This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms by tracking client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities. The system now includes advanced prospecting with follow-ups, detailed consultant performance metrics, an improved internal assistant, and comprehensive analytical reports.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes
-
-### Importação Completa de Dados (October 20, 2025)
-Implementado sistema completo de importação de dados permanentes das planilhas Excel com proteção contra perda em redeploy:
-
-**Dados Importados**:
-- 993 Empresas da planilha empresas.xlsx (15 CNPJs duplicados ignorados)
-- 20 Consultores extraídos do cronograma
-- 4967 Alocações de Cronograma (manhã/tarde por consultor)
-- 266 Registros da Linha Educacional (corrigido mapeamento de colunas)
-- 2940 Registros da Linha Tecnologia
-- 3003 Contatos
-
-**Modificações no Banco de Dados**:
-- Adicionado campo `dados_iniciais` (Boolean) aos modelos Empresa, Consultor e AlocacaoCronograma
-- Todos os dados importados das planilhas são marcados com `dados_iniciais=True`
-- Sistema verifica flag `dados_iniciais` antes de reimportar, evitando duplicatas
-
-**Otimizações no seed_data.py**:
-- Importação otimizada de empresas com batch commits (100 empresas por vez)
-- Detecção de CNPJs duplicados na planilha (15 encontrados e ignorados)
-- Cache de CNPJs existentes em memória para evitar queries repetidas
-- Logs informativos de progresso durante importação
-- Tratamento robusto de erros sem perda de dados válidos
-
-**Interface**:
-- Corrigido tema escuro na página Empresas (contador de registros agora com fundo #2a2a2a)
-
-### Cronograma Visual em Calendário (October 17, 2025)
-Implementado sistema completo de cronograma visual de alocações de consultores em formato de calendário mensal:
-
-**Modelo de Dados**:
-- Adicionado modelo `AlocacaoCronograma` para alocações diárias por período (manhã/tarde)
-- Campo NIF adicionado ao modelo Consultor para identificação única
-
-**Backend (API)**:
-- `/api/cronogramas/alocacoes/listar` - Lista alocações com filtros de data e consultor
-- `/api/cronogramas/alocacoes/criar` - CRUD para criar alocações (validado com Pydantic)
-- `/api/cronogramas/alocacoes/{id}` - PUT/DELETE para editar e excluir alocações
-- `/api/relatorios/cronograma-pdf` - Exporta cronograma em PDF com filtros aplicados
-- `/api/relatorios/cronograma-excel` - Exporta cronograma em Excel com filtros aplicados
-
-**Frontend - Calendário Visual**:
-- **Layout de Calendário Mensal**: Visualização em grid 7x6 com dias da semana
-- **Tema Escuro Completo**: Paleta de cores consistente (#1a1f3a, #2d3561, #667eea)
-- **Legenda Visual Colorizada**: 7 tipos de projeto com cores distintas (C-, K-, F-, M-, T-, P-, O-)
-- **Navegação entre Meses**: Botões para avançar/retroceder meses com carregamento dinâmico
-- **Filtros por Consultor**: Dropdown para filtrar alocações por consultor específico
-- **Edição Inline**: Hover sobre alocações exibe botão de exclusão
-- **Modal de Edição por Dia**: Clique no dia abre modal mostrando todas as alocações (manhã/tarde)
-- **Modal de Criação**: Adicionar novas alocações com validação de campos
-- **Exportação com Filtros**: Botões PDF/Excel exportam dados filtrados do mês/consultor atual
-
-**Importação de Dados**:
-- Script `importar_cronograma.py` para importar planilhas Excel
-- 4966 alocações importadas com sucesso
-- 17 consultores cadastrados automaticamente
-
 ## System Architecture
 
 ### Backend Architecture
 
-**Framework**: FastAPI (Python)
-- **Rationale**: FastAPI provides high performance, automatic API documentation, type safety with Pydantic, and built-in async support
-- **Authentication**: JWT-based authentication using `python-jose` with bcrypt password hashing
-- **Session Management**: OAuth2 password bearer tokens with 480-minute expiration
-
-**Database ORM**: SQLAlchemy
-- **Rationale**: Mature ORM with excellent PostgreSQL support, connection pooling, and declarative model definitions
-- **Connection Pool**: Pre-configured with pool size of 10, max overflow of 20, and 300-second recycle time for production reliability
-
-**Role-Based Access Control**: Three-tier permission system
-- Admin: Full system access
-- Consultor (Consultant): Limited to assigned proposals and projects
-- Financeiro (Financial): Access to contracts and financial reporting
-- Implementation uses function decorators and database-linked user roles
+**Framework**: FastAPI (Python) for high performance, automatic API documentation, type safety with Pydantic, and async support.
+**Authentication**: JWT-based authentication using `python-jose` with bcrypt password hashing and OAuth2 password bearer tokens with 480-minute expiration.
+**Database ORM**: SQLAlchemy with PostgreSQL, configured with a connection pool for reliability.
+**Role-Based Access Control**: Three-tier permission system (Admin, Consultor, Financeiro, Visualizador) implemented with function decorators and database-linked user roles.
 
 ### Frontend Architecture
 
-**Template Engine**: Jinja2 templates with server-side rendering
-- **Rationale**: Simplifies development while maintaining security, reduces client-side complexity
-- **Design System**: Custom CSS with dark theme using CSS variables for consistency
-- **Component Structure**: Base template with block inheritance for consistent layout
-
-**Visualization**: Plotly.js for interactive BI dashboards
-- **Rationale**: Rich charting capabilities with responsive design and dark theme support
-
-**Client Communication**: Vanilla JavaScript with Fetch API
-- **Rationale**: No framework overhead, direct control over API interactions
-- **Authentication**: Bearer token stored in localStorage, automatically included in request headers
+**Template Engine**: Jinja2 templates with server-side rendering for simplified development and security.
+**Design System**: Custom CSS with a dark theme using CSS variables for consistency.
+**Visualization**: Plotly.js for interactive BI dashboards with responsive design and dark theme support.
+**Client Communication**: Vanilla JavaScript with Fetch API for direct API interactions, using bearer tokens stored in localStorage for authentication.
 
 ### Data Models
 
-**Core Entities**:
-1. **Usuario** (User): System users with role-based permissions
-2. **Empresa** (Company): Client companies with CNPJ identification
-3. **Consultor** (Consultant): Project consultants with NIF identification
-4. **Proposta** (Proposal): Sales proposals with conversion tracking
-5. **Cronograma** (Schedule): Project timelines with progress tracking
-6. **AlocacaoCronograma** (Schedule Allocation): Daily consultant allocations by period (morning/afternoon)
-7. **Contrato** (Contract): Financial contracts with payment tracking
-8. **Feriado** (Holiday): Calendar management for scheduling
-9. **Contato** (Contact): Company contacts with protected initial data from Excel import
-10. **LinhaTecnologia** (Technology Line): Technology programs with immutable seed data
-11. **LinhaEducacional** (Educational Line): Educational programs with immutable seed data
-
-**Relationships**:
-- One-to-Many: Empresa → Propostas, Proposta → Cronogramas, Proposta → Contratos
-- Consultor → AlocacaoCronograma: Each consultant has multiple daily allocations
-- User-Consultant linking for role-based data filtering
-- Audit trails with creation timestamps on all entities
+**Core Entities**: Usuario, Empresa, Consultor, Proposta, Cronograma, AlocacaoCronograma, Contrato, Feriado, Contato, LinhaTecnologia, LinhaEducacional.
+**Relationships**: One-to-Many relationships exist between core entities (e.g., Empresa to Propostas). Consultant allocations are tracked daily. Initial data imported from Excel is marked `dados_iniciais=True` and protected from modification via API.
 
 ### API Structure
 
-**RESTful Endpoints** organized by domain:
-- `/api/login` - Authentication
-- `/api/empresas` - Company CRUD
-- `/api/consultores` - Consultant management
-- `/api/propostas` - Proposal tracking with filters
-- `/api/cronogramas` - Schedule management with progress calculation
-- `/api/contratos` - Contract and payment tracking
-- `/api/contatos` - Contact management with filters and Excel export
-- `/api/linha-tecnologia` - Technology line programs with CRUD and export
-- `/api/linha-educacional` - Educational line programs with CRUD and export
-- `/api/bi` - Business intelligence aggregations
-- `/api/importacao` - Excel/CSV data import
-- `/api/chatbot` - Natural language query interface
-- `/api/relatorios` - PDF/Excel report generation
-- `/api/alertas` - Automated alert system
-
-**Design Patterns**:
-- Dependency injection for database sessions and authentication
-- Response models with Pydantic schemas for type safety
-- Consistent error handling with HTTP status codes
+**RESTful Endpoints** are organized by domain, including `/api/login`, `/api/empresas`, `/api/consultores`, `/api/propostas`, `/api/cronogramas`, `/api/contratos`, `/api/contatos`, `/api/linha-tecnologia`, `/api/linha-educacional`, `/api/bi`, `/api/importacao`, `/api/chatbot`, `/api/relatorios`, and `/api/alertas`.
+**Design Patterns**: Dependency injection for database sessions and authentication, Pydantic schemas for type safety, and consistent error handling.
 
 ### Alert System
 
-**Automated Monitoring**:
-- Contract expiration alerts (7-day lookahead)
-- Overdue contracts tracking
-- Schedule deadline warnings
-- Stalled proposals (30+ days without updates)
-- Critical tasks identification (low completion % near deadline)
-
-**Implementation**: Centralized `/api/alertas/todos` endpoint aggregates all alert types with database queries using date comparisons
+**Automated Monitoring**: Includes alerts for contract expiration, overdue contracts, schedule deadline warnings, and stalled proposals. A centralized `/api/alertas/todos` endpoint aggregates all alert types.
 
 ### Import/Export System
 
-**Data Import**: Pandas-based Excel/CSV processing
-- **Supported Formats**: .xlsx, .xls, .csv
-- **Validation**: CNPJ cleaning, date parsing, duplicate detection
-- **Batch Processing**: Row-by-row with error collection and rollback support
-
-**Report Generation**:
-- **PDF Reports**: ReportLab with custom styling for proposals, contracts, schedules
-- **Excel Export**: OpenPyXL with formatting (fonts, alignment, fills)
-- **Streaming Responses**: Memory-efficient file downloads
+**Data Import**: Pandas-based Excel/CSV processing supporting .xlsx, .xls, .csv formats with validation, duplicate detection, and batch processing. Seed data import is idempotent and marks initial data as protected.
+**Report Generation**: PDF reports using ReportLab and Excel exports using OpenPyXL with custom formatting and streaming responses.
 
 ### Chatbot Interface
 
-**Natural Language Queries**: Pattern matching for common business questions
-- Contract expiration queries
-- Project status inquiries
-- Financial summaries
-- Implementation uses keyword detection with database aggregations
+**Natural Language Queries**: Supports pattern matching for common business questions, such as contract expiration, project status, and financial summaries. It has optional OpenAI integration for enhanced intelligence, operating with predefined patterns if no API key is provided.
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Primary relational database
-- **Connection**: Via DATABASE_URL environment variable
-- **Features Used**: Date functions, aggregations, foreign key constraints
+- **PostgreSQL**: Primary relational database, connected via `DATABASE_URL` environment variable.
 
 ### Python Libraries
-- **FastAPI**: Web framework and API routing
-- **SQLAlchemy**: ORM and database abstraction
-- **Pydantic**: Data validation and serialization
-- **python-jose**: JWT token handling
-- **bcrypt**: Password hashing
-- **pandas**: Data import/export and Excel processing
-- **openpyxl**: Excel file reading/writing
-- **reportlab**: PDF generation
-- **python-multipart**: File upload handling
+- **FastAPI**: Web framework.
+- **SQLAlchemy**: ORM.
+- **Pydantic**: Data validation.
+- **python-jose**: JWT handling.
+- **bcrypt**: Password hashing.
+- **pandas**: Data import/export.
+- **openpyxl**: Excel handling.
+- **reportlab**: PDF generation.
+- **python-multipart**: File uploads.
+- **OpenAI**: Optional integration for the chatbot.
 
 ### Frontend Libraries
-- **Plotly.js 2.27.0**: Interactive charting and visualizations
-- **Font Awesome 6.4.0**: Icon library
+- **Plotly.js 2.27.0**: Interactive charting.
+- **Font Awesome 6.4.0**: Icon library.
 
 ### Environment Configuration
-- **SESSION_SECRET**: JWT signing key (defaults to insecure value, should be overridden)
-- **DATABASE_URL**: PostgreSQL connection string (required)
-- **ADMIN_EMAIL**: Default admin user email
-- **ADMIN_PASSWORD**: Default admin password
-
-### File Storage
-- **Static Assets**: Served from `/app/static` directory
-- **Upload Processing**: Temporary file handling in memory via BytesIO
-- **Attached Assets**: Sample Excel files in `/attached_assets` for initial data import
-
-## Current Database Status
-
-### Imported Data (October 16, 2025)
-Successfully imported from Excel spreadsheets:
-- **249 Companies** (Empresas) - Client companies with CNPJ and contact information
-- **19 Consultants** (Consultores) - Project consultants assigned to proposals
-- **224 Proposals** (Propostas) - Sales proposals with status tracking and consultant assignments
-- **224 Schedules** (Cronogramas) - Project timelines with automatic progress calculation
-
-### Novos Dados Permanentes (October 17, 2025)
-Sistema de importação automática de dados das planilhas Excel com proteção contra modificação:
-- **3003 Contatos** - Base completa de contatos de empresas com informações detalhadas
-- **2940 Linha Tecnologia** - Registros de programas da linha tecnologia
-- **266 Linha Educacional** - Registros de programas da linha educacional
-
-**Características**:
-- Dados marcados com `dados_iniciais=True` no banco
-- Proteção a nível de API: endpoints PUT/DELETE retornam HTTP 403 para dados iniciais
-- Importação automática na inicialização (apenas primeira vez)
-- Sistema idempotente: não reimporta dados já existentes
-- Novos registros criados pelo usuário são editáveis/deletáveis normalmente
-
-### System Readiness
-All 9 core requirements are implemented and functional:
-1. ✅ Role-based authentication (Admin, Consultor, Financeiro)
-2. ✅ Intelligent prospecting with advanced filters and statistics
-3. ✅ Automated schedule progress tracking based on task completion
-4. ✅ Contract billing analytics and payment tracking
-5. ✅ BI Dashboard with interactive Plotly charts
-6. ✅ Centralized smart alerts (contracts, deadlines, stalled proposals)
-7. ✅ Excel/PDF export with custom filters
-8. ✅ Intelligent chatbot for natural language queries
-9. ✅ Responsive UI with dark theme
-
-### Access Credentials
-- **Admin User**: admin@sistema.com / admin123
-- **Database**: PostgreSQL (Replit-managed, configured via DATABASE_URL)
+- **SESSION_SECRET**: JWT signing key.
+- **DATABASE_URL**: PostgreSQL connection string.
+- **ADMIN_EMAIL**: Default admin user email.
+- **ADMIN_PASSWORD**: Default admin password.
+- **OPENAI_API_KEY**: Optional API key for advanced chatbot features.
