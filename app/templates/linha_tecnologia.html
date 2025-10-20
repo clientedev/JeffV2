@@ -7,12 +7,12 @@
     <div class="row mb-4">
         <div class="col-12">
             <h2>Linha Tecnologia</h2>
-            <p class="text-muted">Gerenciar programas da linha tecnologia</p>
+            <p class="text-muted">Gerenciar programas da linha tecnologia - <span id="totalRegistros">0</span> registros</p>
         </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <input type="text" id="searchInput" class="form-control" placeholder="Buscar...">
         </div>
         <div class="col-md-2">
@@ -21,16 +21,26 @@
             </select>
         </div>
         <div class="col-md-2">
-            <select id="anoFilter" class="form-select">
-                <option value="">Todos os Anos</option>
+            <select id="statusFilter" class="form-select">
+                <option value="">Todos Status</option>
             </select>
         </div>
-        <div class="col-md-5 text-end">
-            <button class="btn btn-success" onclick="novoRegistro()">
-                <i class="bi bi-plus-circle"></i> Novo Registro
+        <div class="col-md-1">
+            <select id="anoFilter" class="form-select">
+                <option value="">Ano</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="consultorFilter" class="form-select">
+                <option value="">Consultor</option>
+            </select>
+        </div>
+        <div class="col-md-3 text-end">
+            <button class="btn btn-success btn-sm" onclick="novoRegistro()">
+                <i class="bi bi-plus-circle"></i> Novo
             </button>
-            <button class="btn btn-primary" onclick="exportarExcel()">
-                <i class="bi bi-download"></i> Exportar Excel
+            <button class="btn btn-primary btn-sm" onclick="exportarExcel()">
+                <i class="bi bi-download"></i> Excel
             </button>
         </div>
     </div>
@@ -43,8 +53,9 @@
                         <table class="table table-hover table-sm">
                             <thead>
                                 <tr>
-                                    <th>Empresa</th>
-                                    <th>N º Proposta</th>
+                                    <th style="width: 20%">Empresa</th>
+                                    <th>Nº Proposta</th>
+                                    <th>Status Etapa</th>
                                     <th>Consultor</th>
                                     <th>Situação</th>
                                     <th>Valor</th>
@@ -53,9 +64,22 @@
                                 </tr>
                             </thead>
                             <tbody id="registrosTableBody">
-                                <tr><td colspan="7" class="text-center">Carregando...</td></tr>
+                                <tr><td colspan="8" class="text-center">Carregando...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 100px;">
+                                <option value="25">25</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -99,10 +123,20 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Situação</label>
                             <input type="text" class="form-control" id="situacao">
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Solução</label>
+                            <input type="text" class="form-control" id="solucao">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">T3</label>
+                            <input type="text" class="form-control" id="t3">
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Ano</label>
                             <input type="number" class="form-control" id="ano">
@@ -111,13 +145,11 @@
                             <label class="form-label">Mês</label>
                             <input type="text" class="form-control" id="mes">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Data Início</label>
                             <input type="date" class="form-control" id="data_inicio">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Data Término</label>
                             <input type="date" class="form-control" id="data_termino">
                         </div>
@@ -137,7 +169,9 @@
 </div>
 
 <script>
-let registros = [];
+let currentPage = 1;
+let pageSize = 50;
+let totalPages = 1;
 
 async function carregarFiltros() {
     try {
@@ -155,12 +189,28 @@ async function carregarFiltros() {
             situacaoSelect.appendChild(option);
         });
         
+        const statusSelect = document.getElementById('statusFilter');
+        filtros.status_etapas.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s;
+            option.textContent = s;
+            statusSelect.appendChild(option);
+        });
+        
         const anoSelect = document.getElementById('anoFilter');
         filtros.anos.forEach(a => {
             const option = document.createElement('option');
             option.value = a;
             option.textContent = a;
             anoSelect.appendChild(option);
+        });
+        
+        const consultorSelect = document.getElementById('consultorFilter');
+        filtros.consultores.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c;
+            option.textContent = c;
+            consultorSelect.appendChild(option);
         });
     } catch (error) {
         console.error('Erro ao carregar filtros:', error);
@@ -172,50 +222,88 @@ async function carregarRegistros() {
         const token = localStorage.getItem('token');
         const search = document.getElementById('searchInput').value;
         const situacao = document.getElementById('situacaoFilter').value;
+        const status_etapa = document.getElementById('statusFilter').value;
         const ano = document.getElementById('anoFilter').value;
+        const consultor = document.getElementById('consultorFilter').value;
         
-        let url = '/api/linha-tecnologia/?limit=1000';
+        let url = `/api/linha-tecnologia/?page=${currentPage}&page_size=${pageSize}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (situacao) url += `&situacao=${encodeURIComponent(situacao)}`;
+        if (status_etapa) url += `&status_etapa=${encodeURIComponent(status_etapa)}`;
         if (ano) url += `&ano=${ano}`;
+        if (consultor) url += `&consultor=${encodeURIComponent(consultor)}`;
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        registros = await response.json();
-        renderizarTabela();
+        const data = await response.json();
+        totalPages = data.total_pages;
+        document.getElementById('totalRegistros').textContent = data.total;
+        renderizarTabela(data.data);
+        renderizarPaginacao();
     } catch (error) {
         console.error('Erro ao carregar registros:', error);
     }
 }
 
-function renderizarTabela() {
+function renderizarTabela(registros) {
     const tbody = document.getElementById('registrosTableBody');
     
     if (registros.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum registro encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum registro encontrado</td></tr>';
         return;
     }
     
     tbody.innerHTML = registros.map(r => `
         <tr>
-            <td>${r.empresa || ''}</td>
+            <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${r.empresa || ''}">${r.empresa || ''}</td>
             <td>${r.numero_proposta || ''}</td>
+            <td>${r.status_etapa || ''}</td>
             <td>${r.consultor || ''}</td>
             <td>${r.situacao || ''}</td>
             <td>${r.valor_proposta ? 'R$ ' + parseFloat(r.valor_proposta).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : ''}</td>
             <td>${r.ano || ''}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="editarRegistro(${r.id})">
+                <button class="btn btn-sm btn-primary" onclick="editarRegistro(${r.id})" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deletarRegistro(${r.id})">
+                ${!r.dados_iniciais ? `<button class="btn btn-sm btn-danger" onclick="deletarRegistro(${r.id})" title="Deletar">
                     <i class="bi bi-trash"></i>
-                </button>
+                </button>` : ''}
             </td>
         </tr>
     `).join('');
+}
+
+function renderizarPaginacao() {
+    const controls = document.getElementById('paginationControls');
+    let html = '';
+    
+    html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="mudarPagina(${currentPage - 1})">Anterior</a>
+    </li>`;
+    
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="mudarPagina(${i})">${i}</a>
+        </li>`;
+    }
+    
+    html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="mudarPagina(${currentPage + 1})">Próxima</a>
+    </li>`;
+    
+    controls.innerHTML = html;
+}
+
+function mudarPagina(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    carregarRegistros();
 }
 
 function novoRegistro() {
@@ -239,6 +327,8 @@ async function editarRegistro(id) {
         document.getElementById('consultor').value = registro.consultor || '';
         document.getElementById('valor_proposta').value = registro.valor_proposta || '';
         document.getElementById('situacao').value = registro.situacao || '';
+        document.getElementById('solucao').value = registro.solucao || '';
+        document.getElementById('t3').value = registro.t3 || '';
         document.getElementById('ano').value = registro.ano || '';
         document.getElementById('mes').value = registro.mes || '';
         document.getElementById('data_inicio').value = registro.data_inicio || '';
@@ -264,6 +354,8 @@ async function salvarRegistro() {
             consultor: document.getElementById('consultor').value || null,
             valor_proposta: document.getElementById('valor_proposta').value || null,
             situacao: document.getElementById('situacao').value || null,
+            solucao: document.getElementById('solucao').value || null,
+            t3: document.getElementById('t3').value || null,
             ano: document.getElementById('ano').value ? parseInt(document.getElementById('ano').value) : null,
             mes: document.getElementById('mes').value || null,
             data_inicio: document.getElementById('data_inicio').value || null,
@@ -288,7 +380,8 @@ async function salvarRegistro() {
             carregarRegistros();
             alert('Registro salvo com sucesso!');
         } else {
-            alert('Erro ao salvar registro');
+            const error = await response.json();
+            alert('Erro ao salvar registro: ' + (error.detail || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Erro ao salvar registro:', error);
@@ -310,7 +403,8 @@ async function deletarRegistro(id) {
             carregarRegistros();
             alert('Registro deletado com sucesso!');
         } else {
-            alert('Erro ao deletar registro');
+            const error = await response.json();
+            alert('Erro ao deletar registro: ' + (error.detail || 'Erro desconhecido'));
         }
     } catch (error) {
         console.error('Erro ao deletar registro:', error);
@@ -333,10 +427,18 @@ function exportarExcel() {
 }
 
 document.getElementById('searchInput').addEventListener('keyup', function() {
+    currentPage = 1;
     setTimeout(carregarRegistros, 500);
 });
-document.getElementById('situacaoFilter').addEventListener('change', carregarRegistros);
-document.getElementById('anoFilter').addEventListener('change', carregarRegistros);
+document.getElementById('situacaoFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
+document.getElementById('statusFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
+document.getElementById('anoFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
+document.getElementById('consultorFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
+document.getElementById('pageSizeSelect').addEventListener('change', function() {
+    pageSize = parseInt(this.value);
+    currentPage = 1;
+    carregarRegistros();
+});
 
 carregarFiltros();
 carregarRegistros();
