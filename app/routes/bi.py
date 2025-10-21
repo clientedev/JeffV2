@@ -131,30 +131,30 @@ async def get_dashboard_data(
     total_edu = db.query(func.count(LinhaEducacional.id)).scalar() or 0
     total_propostas = total_tec + total_edu
     
-    # Propostas ativas (ano atual)
+    # Propostas ativas (PREVISTO para tecnologia, todas não FATURADO/CANCELADO para educacional)
     propostas_ativas_tec = db.query(func.count(LinhaTecnologia.id)).filter(
         LinhaTecnologia.ano == ano_atual,
-        LinhaTecnologia.situacao.ilike('%em andamento%')
+        LinhaTecnologia.situacao == 'PREVISTO'
     ).scalar() or 0
     
     propostas_ativas_edu = db.query(func.count(LinhaEducacional.id)).filter(
         LinhaEducacional.ano == ano_atual,
-        LinhaEducacional.situacao.ilike('%em andamento%')
+        LinhaEducacional.situacao.notin_(['FATURADO', 'CANCELADO'])
     ).scalar() or 0
     
     propostas_ativas = propostas_ativas_tec + propostas_ativas_edu
     
-    # Propostas fechadas no mês
+    # Propostas fechadas no mês (FATURADO)
     propostas_fechadas_mes_tec = db.query(func.count(LinhaTecnologia.id)).filter(
         LinhaTecnologia.mes == str(mes_atual),
         LinhaTecnologia.ano == ano_atual,
-        LinhaTecnologia.situacao.ilike('%concluí%')
+        LinhaTecnologia.situacao == 'FATURADO'
     ).scalar() or 0
     
     propostas_fechadas_mes_edu = db.query(func.count(LinhaEducacional.id)).filter(
         LinhaEducacional.mes == str(mes_atual),
         LinhaEducacional.ano == ano_atual,
-        LinhaEducacional.situacao.ilike('%concluí%')
+        LinhaEducacional.situacao == 'FATURADO'
     ).scalar() or 0
     
     propostas_fechadas_mes = propostas_fechadas_mes_tec + propostas_fechadas_mes_edu
@@ -177,13 +177,13 @@ async def get_dashboard_data(
     
     receita_mes = float(receita_mes_tec) + float(receita_mes_edu)
     
-    # Taxa de conversão
+    # Taxa de conversão (FATURADO)
     total_propostas_fechadas_tec = db.query(func.count(LinhaTecnologia.id)).filter(
-        LinhaTecnologia.situacao.ilike('%concluí%')
+        LinhaTecnologia.situacao == 'FATURADO'
     ).scalar() or 0
     
     total_propostas_fechadas_edu = db.query(func.count(LinhaEducacional.id)).filter(
-        LinhaEducacional.situacao.ilike('%concluí%')
+        LinhaEducacional.situacao == 'FATURADO'
     ).scalar() or 0
     
     total_propostas_fechadas = total_propostas_fechadas_tec + total_propostas_fechadas_edu
@@ -240,18 +240,18 @@ async def propostas_por_consultor(
         func.count(LinhaTecnologia.id).label('total')
     ).filter(LinhaTecnologia.consultor.isnot(None)).group_by(LinhaTecnologia.consultor).all()
     
-    # Dados de Linha Educacional
+    # Dados de Linha Educacional (usa instrutor_1)
     resultados_edu = db.query(
-        LinhaEducacional.consultor,
+        LinhaEducacional.instrutor_1,
         func.count(LinhaEducacional.id).label('total')
-    ).filter(LinhaEducacional.consultor.isnot(None)).group_by(LinhaEducacional.consultor).all()
+    ).filter(LinhaEducacional.instrutor_1.isnot(None)).group_by(LinhaEducacional.instrutor_1).all()
     
     # Consolidar resultados
     consultor_dict = {}
     for r in resultados_tec:
         consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.total
     for r in resultados_edu:
-        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.total
+        consultor_dict[r.instrutor_1] = consultor_dict.get(r.instrutor_1, 0) + r.total
     
     # Retornar top 10 consultores
     consultores_sorted = sorted(consultor_dict.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -323,16 +323,16 @@ async def produtividade_consultores(
     ).filter(LinhaTecnologia.consultor.isnot(None)).group_by(LinhaTecnologia.consultor).all()
     
     resultados_edu = db.query(
-        LinhaEducacional.consultor,
+        LinhaEducacional.instrutor_1,
         func.count(LinhaEducacional.id).label('quantidade')
-    ).filter(LinhaEducacional.consultor.isnot(None)).group_by(LinhaEducacional.consultor).all()
+    ).filter(LinhaEducacional.instrutor_1.isnot(None)).group_by(LinhaEducacional.instrutor_1).all()
     
     # Consolidar
     consultor_dict = {}
     for r in resultados_tec:
         consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.quantidade
     for r in resultados_edu:
-        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.quantidade
+        consultor_dict[r.instrutor_1] = consultor_dict.get(r.instrutor_1, 0) + r.quantidade
     
     # Retornar top 10
     consultores_sorted = sorted(consultor_dict.items(), key=lambda x: x[1], reverse=True)[:10]
