@@ -102,9 +102,9 @@ async function carregarGraficos() {
             hovertemplate: 'R$ %{y:,.2f}<extra></extra>'
         }], {
             ...darkLayout,
-            height: 300,
-            margin: { t: 20, b: 40, l: 60, r: 20 },
-            xaxis: { ...darkLayout.xaxis, tickangle: -45 },
+            height: 350,
+            margin: { t: 20, b: 100, l: 60, r: 20 },
+            xaxis: { ...darkLayout.xaxis, tickangle: -45, automargin: true },
             yaxis: { ...darkLayout.yaxis, tickprefix: 'R$ ' }
         }, darkConfig);
         
@@ -120,9 +120,9 @@ async function carregarGraficos() {
             hovertemplate: '%{y} propostas<extra></extra>'
         }], {
             ...darkLayout,
-            height: 300,
-            margin: { t: 20, b: 80, l: 40, r: 20 },
-            xaxis: { ...darkLayout.xaxis, tickangle: -45 }
+            height: 350,
+            margin: { t: 20, b: 120, l: 40, r: 20 },
+            xaxis: { ...darkLayout.xaxis, tickangle: -45, automargin: true }
         }, darkConfig);
         
         // Gráfico de Produtividade (Horas)
@@ -137,9 +137,9 @@ async function carregarGraficos() {
             hovertemplate: '%{y} horas<extra></extra>'
         }], {
             ...darkLayout,
-            height: 300,
-            margin: { t: 20, b: 80, l: 40, r: 20 },
-            xaxis: { ...darkLayout.xaxis, tickangle: -45 },
+            height: 350,
+            margin: { t: 20, b: 120, l: 40, r: 20 },
+            xaxis: { ...darkLayout.xaxis, tickangle: -45, automargin: true },
             yaxis: { ...darkLayout.yaxis, title: 'Horas' }
         }, darkConfig);
     } catch (error) {

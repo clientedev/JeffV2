@@ -19,70 +19,73 @@ function logout() {
 
 async function carregarPropostas() {
     try {
-        const status = document.getElementById('filtroStatus').value;
         const busca = document.getElementById('buscaProposta').value;
         
-        let url = `${API_URL}/propostas?limit=100`;
-        if (status) url += `&status_filter=${status}`;
-        
-        const response = await fetch(url, { headers: getHeaders() });
+        const response = await fetch(`${API_URL}/prospeccao/pipeline`, { headers: getHeaders() });
         
         if (response.status === 401) {
             logout();
             return;
         }
         
-        const propostas = await response.json();
-        let filteredPropostas = propostas;
+        const companies = await response.json();
+        let filteredCompanies = companies;
         
         if (busca) {
-            filteredPropostas = propostas.filter(p => 
-                (p.numero_proposta && p.numero_proposta.toLowerCase().includes(busca.toLowerCase())) ||
-                (p.empresa && p.empresa.nome && p.empresa.nome.toLowerCase().includes(busca.toLowerCase()))
+            filteredCompanies = companies.filter(c => 
+                (c.numero_proposta && c.numero_proposta.toLowerCase().includes(busca.toLowerCase())) ||
+                (c.empresa && c.empresa.toLowerCase().includes(busca.toLowerCase())) ||
+                (c.cnpj && c.cnpj.toLowerCase().includes(busca.toLowerCase()))
             );
         }
         
         const tbody = document.getElementById('propostasTable');
         
-        if (filteredPropostas.length === 0) {
+        if (filteredCompanies.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" class="empty-state">
                         <div class="empty-state-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="empty-state-title">Nenhuma proposta encontrada</div>
-                        <div class="empty-state-description">Comece adicionando uma nova proposta</div>
+                        <div class="empty-state-title">Nenhuma empresa em prospecção encontrada</div>
+                        <div class="empty-state-description">As empresas em prospecção aparecerão aqui</div>
                     </td>
                 </tr>
             `;
             return;
         }
         
-        tbody.innerHTML = filteredPropostas.map(p => {
-            let statusClass = 'badge-primary';
-            if (p.status === 'Fechado') statusClass = 'badge-success';
-            else if (p.status === 'Perdido') statusClass = 'badge-danger';
-            
+        tbody.innerHTML = filteredCompanies.map(c => {
             return `
                 <tr>
-                    <td>${p.numero_proposta || '-'}</td>
-                    <td>${p.empresa ? p.empresa.nome : 'ID: ' + p.empresa_id}</td>
-                    <td>${p.consultor ? p.consultor.nome : (p.consultor_id ? 'ID: ' + p.consultor_id : 'N/A')}</td>
-                    <td>${p.solucao || '-'}</td>
-                    <td>R$ ${(p.valor_proposta || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td><span class="badge ${statusClass}">${p.status || 'Em andamento'}</span></td>
+                    <td>${c.numero_proposta || '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="editarProposta(${p.id})" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletarProposta(${p.id})" title="Excluir">
-                            <i class="fas fa-trash"></i>
+                        <div style="font-weight: 600;">${c.empresa}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${c.cnpj || ''}</div>
+                    </td>
+                    <td>${c.consultor || '-'}</td>
+                    <td>
+                        <div>${c.tipo_programa || '-'}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${c.linha}</div>
+                    </td>
+                    <td>${c.valor_proposta ? 'R$ ' + c.valor_proposta.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '-'}</td>
+                    <td><span class="badge badge-primary" style="background-color: ${c.stage_cor};">${c.stage || 'N/A'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="window.location.href='/pipeline'" title="Ver no Pipeline">
+                            <i class="fas fa-external-link-alt"></i>
                         </button>
                     </td>
                 </tr>
             `;
         }).join('');
     } catch (error) {
-        console.error('Erro ao carregar propostas:', error);
+        console.error('Erro ao carregar empresas:', error);
+        document.getElementById('propostasTable').innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-danger);">
+                    Erro ao carregar dados. Tente novamente.
+                </td>
+            </tr>
+        `;
     }
 }
 

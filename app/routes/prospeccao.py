@@ -6,7 +6,7 @@ from datetime import date
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.models.models import Prospeccao, FollowUp, Usuario
+from app.models.models import Prospeccao, FollowUp, Usuario, CompanyPipeline, Stage
 from app.auth import get_current_user
 
 router = APIRouter()
@@ -123,6 +123,39 @@ async def listar_prospeccao(
     
     prospeccoes = query.order_by(desc(Prospeccao.criado_em)).offset(skip).limit(limit).all()
     return prospeccoes
+
+@router.get("/pipeline")
+async def get_prospeccao_pipeline(
+    linha: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """Retorna empresas do pipeline que estão em fase de prospecção"""
+    prospeccao_stages = db.query(Stage).filter(
+        Stage.nome.in_(["Prospecção", "Proposta Enviada", "Negociação"])
+    ).all()
+    stage_ids = [s.id for s in prospeccao_stages]
+    
+    query = db.query(CompanyPipeline).filter(CompanyPipeline.stage_id.in_(stage_ids))
+    
+    if linha:
+        query = query.filter(CompanyPipeline.linha == linha)
+    
+    companies = query.order_by(CompanyPipeline.ultima_atualizacao.desc()).limit(100).all()
+    
+    return [{
+        "id": c.id,
+        "empresa": c.nome_empresa,
+        "cnpj": c.cnpj,
+        "linha": c.linha,
+        "tipo_programa": c.tipo_programa,
+        "porte": c.porte,
+        "consultor": c.consultor_responsavel,
+        "numero_proposta": c.numero_proposta,
+        "valor_proposta": float(c.valor_proposta) if c.valor_proposta else None,
+        "stage": c.stage.nome if c.stage else None,
+        "stage_cor": c.stage.cor if c.stage else None
+    } for c in companies]
 
 @router.get("/kanban")
 async def get_kanban_data(
