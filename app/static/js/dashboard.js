@@ -20,7 +20,7 @@ const darkConfig = {
 };
 
 function getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem('access_token');
 }
 
 function getHeaders() {
@@ -31,7 +31,7 @@ function getHeaders() {
 }
 
 function logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     window.location.href = '/';
 }
