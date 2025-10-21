@@ -119,6 +119,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 20%">Empresa</th>
+                                    <th>Tipo Programa</th>
                                     <th>Nº Proposta</th>
                                     <th>Status Etapa</th>
                                     <th>Consultor</th>
@@ -129,7 +130,7 @@
                                 </tr>
                             </thead>
                             <tbody id="registrosTableBody">
-                                <tr><td colspan="8" class="text-center">Carregando...</td></tr>
+                                <tr><td colspan="9" class="text-center">Carregando...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -175,30 +176,60 @@
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo Programa</label>
+                            <input type="text" class="form-control" id="tipo_programa">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Porte</label>
+                            <input type="text" class="form-control" id="porte">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">ER</label>
+                            <input type="text" class="form-control" id="er">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sigla</label>
+                            <input type="text" class="form-control" id="sigla">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">T3</label>
+                            <input type="text" class="form-control" id="t3">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Status Etapa</label>
+                            <input type="text" class="form-control" id="status_etapa">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Nº Proposta</label>
                             <input type="text" class="form-control" id="numero_proposta">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Consultor</label>
                             <input type="text" class="form-control" id="consultor">
                         </div>
-                        <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Solução</label>
+                            <textarea class="form-control" id="solucao" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Valor Proposta</label>
                             <input type="number" step="0.01" class="form-control" id="valor_proposta">
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Situação</label>
                             <input type="text" class="form-control" id="situacao">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Solução</label>
-                            <input type="text" class="form-control" id="solucao">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">T3</label>
-                            <input type="text" class="form-control" id="t3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Linha</label>
+                            <input type="text" class="form-control" id="linha" value="Tecnologia" readonly>
                         </div>
                     </div>
                     <div class="row">
@@ -240,7 +271,7 @@ let totalPages = 1;
 
 async function carregarFiltros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch('/api/linha-tecnologia/filtros', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -284,7 +315,7 @@ async function carregarFiltros() {
 
 async function carregarRegistros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const search = document.getElementById('searchInput').value;
         const situacao = document.getElementById('situacaoFilter').value;
         const status_etapa = document.getElementById('statusFilter').value;
@@ -316,13 +347,14 @@ function renderizarTabela(registros) {
     const tbody = document.getElementById('registrosTableBody');
     
     if (registros.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum registro encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum registro encontrado</td></tr>';
         return;
     }
     
     tbody.innerHTML = registros.map(r => `
         <tr>
             <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${r.empresa || ''}">${r.empresa || ''}</td>
+            <td>${r.tipo_programa || ''}</td>
             <td>${r.numero_proposta || ''}</td>
             <td>${r.status_etapa || ''}</td>
             <td>${r.consultor || ''}</td>
@@ -379,7 +411,7 @@ function novoRegistro() {
 
 async function editarRegistro(id) {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/linha-tecnologia/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -388,12 +420,18 @@ async function editarRegistro(id) {
         document.getElementById('registroId').value = registro.id;
         document.getElementById('empresa').value = registro.empresa || '';
         document.getElementById('cnpj').value = registro.cnpj || '';
+        document.getElementById('tipo_programa').value = registro.tipo_programa || '';
+        document.getElementById('porte').value = registro.porte || '';
+        document.getElementById('er').value = registro.er || '';
+        document.getElementById('sigla').value = registro.sigla || '';
+        document.getElementById('t3').value = registro.t3 || '';
+        document.getElementById('status_etapa').value = registro.status_etapa || '';
         document.getElementById('numero_proposta').value = registro.numero_proposta || '';
         document.getElementById('consultor').value = registro.consultor || '';
+        document.getElementById('solucao').value = registro.solucao || '';
         document.getElementById('valor_proposta').value = registro.valor_proposta || '';
         document.getElementById('situacao').value = registro.situacao || '';
-        document.getElementById('solucao').value = registro.solucao || '';
-        document.getElementById('t3').value = registro.t3 || '';
+        document.getElementById('linha').value = registro.linha || 'Tecnologia';
         document.getElementById('ano').value = registro.ano || '';
         document.getElementById('mes').value = registro.mes || '';
         document.getElementById('data_inicio').value = registro.data_inicio || '';
@@ -409,18 +447,24 @@ async function editarRegistro(id) {
 
 async function salvarRegistro() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const id = document.getElementById('registroId').value;
         
         const data = {
+            linha: document.getElementById('linha').value || 'Tecnologia',
             empresa: document.getElementById('empresa').value || null,
             cnpj: document.getElementById('cnpj').value || null,
+            tipo_programa: document.getElementById('tipo_programa').value || null,
+            porte: document.getElementById('porte').value || null,
+            er: document.getElementById('er').value || null,
+            sigla: document.getElementById('sigla').value || null,
+            t3: document.getElementById('t3').value || null,
+            status_etapa: document.getElementById('status_etapa').value || null,
             numero_proposta: document.getElementById('numero_proposta').value || null,
             consultor: document.getElementById('consultor').value || null,
+            solucao: document.getElementById('solucao').value || null,
             valor_proposta: document.getElementById('valor_proposta').value || null,
             situacao: document.getElementById('situacao').value || null,
-            solucao: document.getElementById('solucao').value || null,
-            t3: document.getElementById('t3').value || null,
             ano: document.getElementById('ano').value ? parseInt(document.getElementById('ano').value) : null,
             mes: document.getElementById('mes').value || null,
             data_inicio: document.getElementById('data_inicio').value || null,
@@ -458,7 +502,7 @@ async function deletarRegistro(id) {
     if (!confirm('Deseja realmente deletar este registro?')) return;
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/linha-tecnologia/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }

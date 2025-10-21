@@ -75,8 +75,7 @@ async def listar(
     page: int = 1,
     page_size: int = 50,
     search: Optional[str] = None,
-    situacao: Optional[str] = None
-,
+    situacao: Optional[str] = None,
     status_etapa: Optional[str] = None,
     ano: Optional[int] = None,
     mes: Optional[str] = None,
