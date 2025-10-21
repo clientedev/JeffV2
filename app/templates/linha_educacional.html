@@ -96,8 +96,8 @@
             </select>
         </div>
         <div class="col-md-2">
-            <select id="consultorFilter" class="form-select">
-                <option value="">Consultor</option>
+            <select id="tipoFilter" class="form-select">
+                <option value="">Tipo</option>
             </select>
         </div>
         <div class="col-md-3 text-end">
@@ -118,10 +118,11 @@
                         <table class="table table-hover table-sm">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%">Empresa</th>
+                                    <th style="width: 20%">Cliente</th>
+                                    <th>Estabelecimento</th>
                                     <th>Nº Proposta</th>
+                                    <th>Programa</th>
                                     <th>Status Proposta</th>
-                                    <th>Consultor</th>
                                     <th>Situação</th>
                                     <th>Valor</th>
                                     <th>Ano</th>
@@ -165,8 +166,8 @@
                     <input type="hidden" id="registroId">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Empresa</label>
-                            <input type="text" class="form-control" id="empresa">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" class="form-control" id="cliente">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">CNPJ</label>
@@ -174,31 +175,51 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Estabelecimento</label>
+                            <input type="text" class="form-control" id="estabelecimento">
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Nº Proposta</label>
                             <input type="text" class="form-control" id="numero_proposta">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Consultor</label>
-                            <input type="text" class="form-control" id="consultor">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Valor Proposta</label>
-                            <input type="number" step="0.01" class="form-control" id="valor_proposta">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
+                            <label class="form-label">Programa</label>
+                            <input type="text" class="form-control" id="programa">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" class="form-control" id="tipo">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Modalidade</label>
+                            <input type="text" class="form-control" id="modalidade">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">CH (Carga Horária)</label>
+                            <input type="text" class="form-control" id="ch">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Valor</label>
+                            <input type="number" step="0.01" class="form-control" id="valor">
+                        </div>
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Situação</label>
                             <input type="text" class="form-control" id="situacao">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Solução</label>
-                            <input type="text" class="form-control" id="solucao">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status Proposta</label>
+                            <input type="text" class="form-control" id="status_proposta">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Programa</label>
-                            <input type="text" class="form-control" id="programa">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Linha</label>
+                            <input type="text" class="form-control" id="linha" value="Educacional" readonly>
                         </div>
                     </div>
                     <div class="row">
@@ -240,7 +261,7 @@ let totalPages = 1;
 
 async function carregarFiltros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch('/api/linha-educacional/filtros', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -270,12 +291,12 @@ async function carregarFiltros() {
             anoSelect.appendChild(option);
         });
         
-        const consultorSelect = document.getElementById('consultorFilter');
-        filtros.consultores.forEach(c => {
+        const tipoSelect = document.getElementById('tipoFilter');
+        filtros.tipos.forEach(t => {
             const option = document.createElement('option');
-            option.value = c;
-            option.textContent = c;
-            consultorSelect.appendChild(option);
+            option.value = t;
+            option.textContent = t;
+            tipoSelect.appendChild(option);
         });
     } catch (error) {
         console.error('Erro ao carregar filtros:', error);
@@ -284,19 +305,19 @@ async function carregarFiltros() {
 
 async function carregarRegistros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const search = document.getElementById('searchInput').value;
         const situacao = document.getElementById('situacaoFilter').value;
         const status_proposta = document.getElementById('statusPropostaFilter').value;
         const ano = document.getElementById('anoFilter').value;
-        const consultor = document.getElementById('consultorFilter').value;
+        const tipo = document.getElementById('tipoFilter').value;
         
         let url = `/api/linha-educacional/?page=${currentPage}&page_size=${pageSize}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (situacao) url += `&situacao=${encodeURIComponent(situacao)}`;
         if (status_proposta) url += `&status_proposta=${encodeURIComponent(status_proposta)}`;
         if (ano) url += `&ano=${ano}`;
-        if (consultor) url += `&consultor=${encodeURIComponent(consultor)}`;
+        if (tipo) url += `&tipo=${encodeURIComponent(tipo)}`;
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -316,18 +337,19 @@ function renderizarTabela(registros) {
     const tbody = document.getElementById('registrosTableBody');
     
     if (registros.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum registro encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum registro encontrado</td></tr>';
         return;
     }
     
     tbody.innerHTML = registros.map(r => `
         <tr>
-            <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${r.empresa || ''}">${r.empresa || ''}</td>
+            <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${r.cliente || ''}">${r.cliente || ''}</td>
+            <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;" title="${r.estabelecimento || ''}">${r.estabelecimento || ''}</td>
             <td>${r.numero_proposta || ''}</td>
+            <td>${r.programa || ''}</td>
             <td>${r.status_proposta || ''}</td>
-            <td>${r.consultor || ''}</td>
             <td>${r.situacao || ''}</td>
-            <td>${r.valor_proposta ? 'R$ ' + parseFloat(r.valor_proposta).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : ''}</td>
+            <td>${r.valor ? 'R$ ' + parseFloat(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : ''}</td>
             <td>${r.ano || ''}</td>
             <td>
                 <button class="btn btn-sm btn-primary" onclick="editarRegistro(${r.id})" title="Editar">
@@ -379,21 +401,25 @@ function novoRegistro() {
 
 async function editarRegistro(id) {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/linha-educacional/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const registro = await response.json();
         
         document.getElementById('registroId').value = registro.id;
-        document.getElementById('empresa').value = registro.empresa || '';
+        document.getElementById('cliente').value = registro.cliente || '';
         document.getElementById('cnpj').value = registro.cnpj || '';
+        document.getElementById('estabelecimento').value = registro.estabelecimento || '';
         document.getElementById('numero_proposta').value = registro.numero_proposta || '';
-        document.getElementById('consultor').value = registro.consultor || '';
-        document.getElementById('valor_proposta').value = registro.valor_proposta || '';
-        document.getElementById('situacao').value = registro.situacao || '';
-        document.getElementById('solucao').value = registro.solucao || '';
         document.getElementById('programa').value = registro.programa || '';
+        document.getElementById('tipo').value = registro.tipo || '';
+        document.getElementById('modalidade').value = registro.modalidade || '';
+        document.getElementById('ch').value = registro.ch || '';
+        document.getElementById('valor').value = registro.valor || '';
+        document.getElementById('situacao').value = registro.situacao || '';
+        document.getElementById('status_proposta').value = registro.status_proposta || '';
+        document.getElementById('linha').value = registro.linha || 'Educacional';
         document.getElementById('ano').value = registro.ano || '';
         document.getElementById('mes').value = registro.mes || '';
         document.getElementById('data_inicio').value = registro.data_inicio || '';
@@ -409,18 +435,22 @@ async function editarRegistro(id) {
 
 async function salvarRegistro() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const id = document.getElementById('registroId').value;
         
         const data = {
-            empresa: document.getElementById('empresa').value || null,
+            linha: document.getElementById('linha').value || 'Educacional',
+            cliente: document.getElementById('cliente').value || null,
             cnpj: document.getElementById('cnpj').value || null,
+            estabelecimento: document.getElementById('estabelecimento').value || null,
             numero_proposta: document.getElementById('numero_proposta').value || null,
-            consultor: document.getElementById('consultor').value || null,
-            valor_proposta: document.getElementById('valor_proposta').value || null,
-            situacao: document.getElementById('situacao').value || null,
-            solucao: document.getElementById('solucao').value || null,
             programa: document.getElementById('programa').value || null,
+            tipo: document.getElementById('tipo').value || null,
+            modalidade: document.getElementById('modalidade').value || null,
+            ch: document.getElementById('ch').value || null,
+            valor: document.getElementById('valor').value || null,
+            situacao: document.getElementById('situacao').value || null,
+            status_proposta: document.getElementById('status_proposta').value || null,
             ano: document.getElementById('ano').value ? parseInt(document.getElementById('ano').value) : null,
             mes: document.getElementById('mes').value || null,
             data_inicio: document.getElementById('data_inicio').value || null,
@@ -458,7 +488,7 @@ async function deletarRegistro(id) {
     if (!confirm('Deseja realmente deletar este registro?')) return;
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/linha-educacional/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -498,7 +528,7 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
 document.getElementById('situacaoFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
 document.getElementById('statusPropostaFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
 document.getElementById('anoFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
-document.getElementById('consultorFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
+document.getElementById('tipoFilter').addEventListener('change', () => { currentPage = 1; carregarRegistros(); });
 document.getElementById('pageSizeSelect').addEventListener('change', function() {
     pageSize = parseInt(this.value);
     currentPage = 1;
