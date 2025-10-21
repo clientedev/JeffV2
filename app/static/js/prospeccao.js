@@ -21,7 +21,7 @@ async function carregarPropostas() {
     try {
         const busca = document.getElementById('buscaProposta').value;
         
-        const response = await fetch(`${API_URL}/prospeccao/pipeline`, { headers: getHeaders() });
+        const response = await fetch(`${API_URL}/prospeccao/pipeline?incluir_fases_iniciais=true`, { headers: getHeaders() });
         
         if (response.status === 401) {
             logout();
@@ -33,9 +33,9 @@ async function carregarPropostas() {
         
         if (busca) {
             filteredCompanies = companies.filter(c => 
-                (c.numero_proposta && c.numero_proposta.toLowerCase().includes(busca.toLowerCase())) ||
-                (c.empresa && c.empresa.toLowerCase().includes(busca.toLowerCase())) ||
-                (c.cnpj && c.cnpj.toLowerCase().includes(busca.toLowerCase()))
+                (c.numero_proposta && String(c.numero_proposta).toLowerCase().includes(busca.toLowerCase())) ||
+                (c.empresa && String(c.empresa).toLowerCase().includes(busca.toLowerCase())) ||
+                (c.cnpj && String(c.cnpj).toLowerCase().includes(busca.toLowerCase()))
             );
         }
         
@@ -89,35 +89,6 @@ async function carregarPropostas() {
     }
 }
 
-async function carregarEmpresas() {
-    try {
-        const response = await fetch(`${API_URL}/empresas?limit=1000`, { headers: getHeaders() });
-        const empresas = await response.json();
-        
-        const select = document.getElementById('empresa_id');
-        if (select) {
-            select.innerHTML = '<option value="">Selecione...</option>' + 
-                empresas.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
-        }
-    } catch (error) {
-        console.error('Erro ao carregar empresas:', error);
-    }
-}
-
-async function carregarConsultores() {
-    try {
-        const response = await fetch(`${API_URL}/consultores?limit=1000`, { headers: getHeaders() });
-        const consultores = await response.json();
-        
-        const select = document.getElementById('consultor_id');
-        if (select) {
-            select.innerHTML = '<option value="">Selecione...</option>' + 
-                consultores.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-        }
-    } catch (error) {
-        console.error('Erro ao carregar consultores:', error);
-    }
-}
 
 async function salvarProposta() {
     const proposta = {
@@ -187,16 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     carregarPropostas();
-    carregarEmpresas();
-    carregarConsultores();
     
-    const filtroStatus = document.getElementById('filtroStatus');
     const buscaProposta = document.getElementById('buscaProposta');
-    
-    if (filtroStatus) {
-        filtroStatus.addEventListener('change', carregarPropostas);
-    }
-    
     if (buscaProposta) {
         buscaProposta.addEventListener('input', carregarPropostas);
     }

@@ -127,16 +127,25 @@ async def listar_prospeccao(
 @router.get("/pipeline")
 async def get_prospeccao_pipeline(
     linha: Optional[str] = None,
+    incluir_fases_iniciais: bool = False,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """Retorna empresas do pipeline que estão em fase de prospecção"""
-    prospeccao_stages = db.query(Stage).filter(
-        Stage.nome.in_(["Prospecção", "Proposta Enviada", "Negociação"])
-    ).all()
+    """Retorna empresas do pipeline em fase de prospecção (ou opcionalmente fases iniciais)"""
+    from sqlalchemy.orm import selectinload
+    
+    if incluir_fases_iniciais:
+        prospeccao_stages = db.query(Stage).filter(
+            Stage.nome.in_(["Prospecção", "Proposta Enviada", "Negociação"])
+        ).all()
+    else:
+        prospeccao_stages = db.query(Stage).filter(Stage.nome == "Prospecção").all()
+    
     stage_ids = [s.id for s in prospeccao_stages]
     
-    query = db.query(CompanyPipeline).filter(CompanyPipeline.stage_id.in_(stage_ids))
+    query = db.query(CompanyPipeline).options(
+        selectinload(CompanyPipeline.stage)
+    ).filter(CompanyPipeline.stage_id.in_(stage_ids))
     
     if linha:
         query = query.filter(CompanyPipeline.linha == linha)
