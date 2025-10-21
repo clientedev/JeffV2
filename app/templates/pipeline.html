@@ -305,6 +305,10 @@
     <button class="btn btn-primary" onclick="openAddCompanyModal()">
         <i class="fas fa-plus"></i> Nova Empresa
     </button>
+
+    <button class="btn" onclick="openImportModal()" style="background: #10b981; color: white;">
+        <i class="fas fa-download"></i> Importar das Linhas
+    </button>
 </div>
 
 <div class="kanban-board" id="kanbanBoard">
@@ -410,6 +414,35 @@
                 <button type="submit" class="btn btn-primary">Cadastrar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal de Importação -->
+<div class="modal" id="importModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <h2>Importar Dados das Linhas</h2>
+        <p style="color: var(--text-secondary); margin: 16px 0;">
+            Esta ação irá importar as empresas das linhas Educacional e Tecnologia para o pipeline.
+            Apenas empresas que ainda não estão no pipeline serão adicionadas.
+        </p>
+        <div class="form-group">
+            <label>Selecione a Linha *</label>
+            <select id="importLinha" required style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-tertiary); color: var(--text-primary);">
+                <option value="">Selecione...</option>
+                <option value="EDUCACIONAL">Linha Educacional</option>
+                <option value="TECNOLOGIA">Linha Tecnologia</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+            <button type="button" class="btn" onclick="closeImportModal()" style="background: #e5e7eb; color: #374151;">Cancelar</button>
+            <button type="button" class="btn" onclick="importarDados()" style="background: #10b981; color: white;">
+                <i class="fas fa-download"></i> Importar
+            </button>
+        </div>
+        <div id="importProgress" style="display: none; margin-top: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 6px; border: 1px solid var(--border-color);">
+            <div style="font-weight: 600; margin-bottom: 8px;">Importando...</div>
+            <div class="loading-spinner" style="margin: 0 auto;"></div>
+        </div>
     </div>
 </div>
 {% endblock %}

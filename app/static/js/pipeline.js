@@ -363,6 +363,57 @@ function formatDateTime(dateString) {
     });
 }
 
+function openImportModal() {
+    document.getElementById('importModal').classList.add('active');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.remove('active');
+    document.getElementById('importProgress').style.display = 'none';
+}
+
+async function importarDados() {
+    const linha = document.getElementById('importLinha').value;
+
+    if (!linha) {
+        showNotification('Por favor, selecione uma linha', 'error');
+        return;
+    }
+
+    document.getElementById('importProgress').style.display = 'block';
+
+    try {
+        const response = await fetch('/api/pipeline/importar-de-linhas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({ linha })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showNotification(`Importação concluída! ${result.importados} empresas importadas.`, 'success');
+
+            if (result.erros && result.erros.length > 0) {
+                console.warn('Erros durante importação:', result.erros);
+            }
+
+            closeImportModal();
+            await loadCompanies();
+        } else {
+            showNotification(result.detail || 'Erro ao importar dados', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao importar:', error);
+        showNotification('Erro ao importar dados das linhas', 'error');
+    } finally {
+        document.getElementById('importProgress').style.display = 'none';
+    }
+}
+
 function showNotification(message, type) {
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -379,7 +430,7 @@ function showNotification(message, type) {
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-in';
         setTimeout(() => notification.remove(), 300);

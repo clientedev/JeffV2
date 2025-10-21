@@ -20,58 +20,70 @@ function logout() {
 async function carregarPropostas() {
     try {
         const busca = document.getElementById('buscaProposta').value;
-        
-        const response = await fetch(`${API_URL}/prospeccao/pipeline?incluir_fases_iniciais=true`, { headers: getHeaders() });
-        
+
+        const response = await fetch(`${API_URL}/prospeccao/dados-linhas`, { headers: getHeaders() });
+
         if (response.status === 401) {
             logout();
             return;
         }
-        
-        const companies = await response.json();
-        let filteredCompanies = companies;
-        
+
+        const dadosLinhas = await response.json();
+        let filteredData = dadosLinhas;
+
         if (busca) {
-            filteredCompanies = companies.filter(c => 
-                (c.numero_proposta && String(c.numero_proposta).toLowerCase().includes(busca.toLowerCase())) ||
-                (c.empresa && String(c.empresa).toLowerCase().includes(busca.toLowerCase())) ||
-                (c.cnpj && String(c.cnpj).toLowerCase().includes(busca.toLowerCase()))
+            filteredData = dadosLinhas.filter(item =>
+                (item.numero_proposta && String(item.numero_proposta).toLowerCase().includes(busca.toLowerCase())) ||
+                (item.empresa && String(item.empresa).toLowerCase().includes(busca.toLowerCase())) ||
+                (item.cnpj && String(item.cnpj).toLowerCase().includes(busca.toLowerCase()))
             );
         }
-        
+
         const tbody = document.getElementById('propostasTable');
-        
-        if (filteredCompanies.length === 0) {
+
+        if (filteredData.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" class="empty-state">
                         <div class="empty-state-icon"><i class="fas fa-chart-line"></i></div>
                         <div class="empty-state-title">Nenhuma empresa em prospecção encontrada</div>
-                        <div class="empty-state-description">As empresas em prospecção aparecerão aqui</div>
+                        <div class="empty-state-description">Os dados das linhas educacional e tecnológica aparecerão aqui</div>
                     </td>
                 </tr>
             `;
             return;
         }
-        
-        tbody.innerHTML = filteredCompanies.map(c => {
+
+        tbody.innerHTML = filteredData.map(item => {
+            const consultor = item.consultor || '-';
+            const programa = item.programa || item.tipo_programa || item.tipo || '-';
+            const solucao = item.solucao ? item.solucao.substring(0, 50) + '...' : '-';
+
             return `
                 <tr>
-                    <td>${c.numero_proposta || '-'}</td>
+                    <td>${item.numero_proposta || '-'}</td>
                     <td>
-                        <div style="font-weight: 600;">${c.empresa}</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">${c.cnpj || ''}</div>
+                        <div style="font-weight: 600;">${item.empresa}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${item.cnpj || ''}</div>
                     </td>
-                    <td>${c.consultor || '-'}</td>
+                    <td>${consultor}</td>
                     <td>
-                        <div>${c.tipo_programa || '-'}</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">${c.linha}</div>
+                        <div>${programa}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">
+                            <span class="badge" style="background: ${item.linha === 'Educacional' ? '#10b981' : '#3b82f6'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px;">
+                                ${item.linha}
+                            </span>
+                        </div>
                     </td>
-                    <td>${c.valor_proposta ? 'R$ ' + c.valor_proposta.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '-'}</td>
-                    <td><span class="badge badge-primary" style="background-color: ${c.stage_cor};">${c.stage || 'N/A'}</span></td>
+                    <td>${item.valor ? 'R$ ' + item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="window.location.href='/pipeline'" title="Ver no Pipeline">
-                            <i class="fas fa-external-link-alt"></i>
+                        <span class="badge" style="background: #6366f1; color: white; padding: 4px 12px; border-radius: 4px;">
+                            ${item.status || item.situacao || 'N/A'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm" onclick="verDetalhes('${item.id}')" title="Ver Detalhes" style="background: #6366f1; color: white; padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer;">
+                            <i class="fas fa-eye"></i>
                         </button>
                     </td>
                 </tr>
@@ -87,6 +99,10 @@ async function carregarPropostas() {
             </tr>
         `;
     }
+}
+
+function verDetalhes(id) {
+    alert('Visualizando detalhes do item: ' + id);
 }
 
 

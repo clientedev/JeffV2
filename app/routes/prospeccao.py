@@ -166,17 +166,63 @@ async def get_prospeccao_pipeline(
         "stage_cor": c.stage.cor if c.stage else None
     } for c in companies]
 
+@router.get("/dados-linhas")
+async def obter_dados_linhas(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    from app.models.models import LinhaEducacional, LinhaTecnologia
+
+    dados_educacional = db.query(LinhaEducacional).all()
+    dados_tecnologia = db.query(LinhaTecnologia).all()
+
+    resultado = []
+
+    for item in dados_educacional:
+        resultado.append({
+            "id": f"edu_{item.id}",
+            "linha": "Educacional",
+            "empresa": item.cliente or "N/A",
+            "cnpj": item.cnpj,
+            "numero_proposta": item.numero_proposta,
+            "programa": item.programa,
+            "tipo": item.tipo,
+            "valor": float(item.valor) if item.valor else None,
+            "situacao": item.situacao,
+            "status": item.status_proposta,
+            "data_inicio": str(item.data_inicio) if item.data_inicio else None,
+            "observacoes": item.observacoes
+        })
+
+    for item in dados_tecnologia:
+        resultado.append({
+            "id": f"tec_{item.id}",
+            "linha": "Tecnologia",
+            "empresa": item.empresa or "N/A",
+            "cnpj": item.cnpj,
+            "numero_proposta": item.numero_proposta,
+            "tipo_programa": item.tipo_programa,
+            "consultor": item.consultor,
+            "valor": float(item.valor_proposta) if item.valor_proposta else None,
+            "situacao": item.situacao,
+            "status": item.status_etapa,
+            "data_inicio": str(item.data_inicio) if item.data_inicio else None,
+            "solucao": item.solucao,
+            "observacoes": item.observacoes
+        })
+
+    return resultado
+
 @router.get("/kanban")
 async def get_kanban_data(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    # Organiza as prospecções em colunas do Kanban
     novos = db.query(Prospeccao).filter(Prospeccao.status == "Novo").all()
     em_andamento = db.query(Prospeccao).filter(Prospeccao.status == "Em andamento").all()
     fechados = db.query(Prospeccao).filter(Prospeccao.status == "Fechado").all()
     perdidos = db.query(Prospeccao).filter(Prospeccao.status == "Perdido").all()
-    
+
     return {
         "Novo": [{"id": p.id, "empresa": p.empresa, "contato": p.contato, "responsavel": p.responsavel} for p in novos],
         "Em andamento": [{"id": p.id, "empresa": p.empresa, "contato": p.contato, "responsavel": p.responsavel} for p in em_andamento],

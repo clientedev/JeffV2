@@ -486,6 +486,115 @@ async def listar_notas(
     
     return result
 
+class ImportarLinhasRequest(BaseModel):
+    linha: str
+
+@router.post("/importar-de-linhas")
+async def importar_de_linhas(
+    request: ImportarLinhasRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_role("Admin", "Consultor"))
+):
+    linha = request.linha
+    from app.models.models import LinhaEducacional, LinhaTecnologia
+
+    stage_prospeccao = db.query(Stage).filter(Stage.nome == "Prospecção").first()
+    if not stage_prospeccao:
+        raise HTTPException(status_code=404, detail="Etapa de prospecção não encontrada")
+
+    importados = 0
+    erros = []
+
+    if linha.upper() == "EDUCACIONAL":
+        registros = db.query(LinhaEducacional).filter(
+            LinhaEducacional.cnpj.isnot(None),
+            LinhaEducacional.cliente.isnot(None)
+        ).all()
+
+        for reg in registros:
+            try:
+                existing = db.query(CompanyPipeline).filter(
+                    CompanyPipeline.cnpj == reg.cnpj,
+                    CompanyPipeline.linha == "EDUCACIONAL"
+                ).first()
+
+                if not existing:
+                    company = CompanyPipeline(
+                        cnpj=reg.cnpj,
+                        nome_empresa=reg.cliente,
+                        linha="EDUCACIONAL",
+                        tipo_programa=reg.tipo,
+                        stage_id=stage_prospeccao.id,
+                        numero_proposta=reg.numero_proposta,
+                        valor_proposta=reg.valor,
+                        observacoes=reg.observacoes
+                    )
+                    db.add(company)
+                    db.flush()
+
+                    history = CompanyStageHistory(
+                        company_pipeline_id=company.id,
+                        stage_id=stage_prospeccao.id,
+                        data_entrada=datetime.utcnow(),
+                        usuario_id=current_user.id,
+                        observacao="Importado da Linha Educacional"
+                    )
+                    db.add(history)
+                    importados += 1
+            except Exception as e:
+                erros.append(f"Erro ao importar {reg.cliente}: {str(e)}")
+
+    elif linha.upper() == "TECNOLOGIA":
+        registros = db.query(LinhaTecnologia).filter(
+            LinhaTecnologia.cnpj.isnot(None),
+            LinhaTecnologia.empresa.isnot(None)
+        ).all()
+
+        for reg in registros:
+            try:
+                existing = db.query(CompanyPipeline).filter(
+                    CompanyPipeline.cnpj == reg.cnpj,
+                    CompanyPipeline.linha == "TECNOLOGIA"
+                ).first()
+
+                if not existing:
+                    company = CompanyPipeline(
+                        cnpj=reg.cnpj,
+                        nome_empresa=reg.empresa,
+                        linha="TECNOLOGIA",
+                        tipo_programa=reg.tipo_programa,
+                        porte=reg.porte,
+                        er_regiao=reg.er,
+                        consultor_responsavel=reg.consultor,
+                        stage_id=stage_prospeccao.id,
+                        numero_proposta=reg.numero_proposta,
+                        valor_proposta=reg.valor_proposta,
+                        observacoes=reg.observacoes
+                    )
+                    db.add(company)
+                    db.flush()
+
+                    history = CompanyStageHistory(
+                        company_pipeline_id=company.id,
+                        stage_id=stage_prospeccao.id,
+                        data_entrada=datetime.utcnow(),
+                        usuario_id=current_user.id,
+                        observacao="Importado da Linha Tecnologia"
+                    )
+                    db.add(history)
+                    importados += 1
+            except Exception as e:
+                erros.append(f"Erro ao importar {reg.empresa}: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Linha inválida")
+
+    db.commit()
+
+    return {
+        "importados": importados,
+        "erros": erros
+    }
+
 @router.get("/dashboard/stats")
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
