@@ -14,11 +14,12 @@
     
     .kanban-column {
         min-width: 300px;
-        background: #f9fafb;
+        background: var(--bg-secondary);
         border-radius: 8px;
         padding: 16px;
         display: flex;
         flex-direction: column;
+        border: 1px solid var(--border-color);
     }
     
     .kanban-column-header {
@@ -38,7 +39,8 @@
     }
     
     .kanban-column-count {
-        background: white;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
         padding: 4px 10px;
         border-radius: 12px;
         font-size: 12px;
@@ -54,18 +56,19 @@
     }
     
     .kanban-card {
-        background: white;
+        background: var(--bg-tertiary);
         border-radius: 6px;
         padding: 14px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         cursor: move;
         transition: all 0.2s;
         border-left: 3px solid;
     }
     
     .kanban-card:hover {
-        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         transform: translateY(-2px);
+        background: var(--bg-hover);
     }
     
     .kanban-card.dragging {
@@ -76,7 +79,7 @@
         font-weight: 600;
         font-size: 14px;
         margin-bottom: 8px;
-        color: #111827;
+        color: var(--text-primary);
     }
     
     .kanban-card-meta {
@@ -84,14 +87,16 @@
         flex-wrap: wrap;
         gap: 8px;
         font-size: 12px;
-        color: #6b7280;
+        color: var(--text-secondary);
     }
     
     .kanban-card-badge {
         padding: 2px 8px;
         border-radius: 4px;
-        background: #e5e7eb;
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
         font-size: 11px;
+        border: 1px solid var(--border-color);
     }
     
     .kanban-card-warning {
@@ -108,9 +113,9 @@
     }
     
     .filter-bar {
-        background: white;
+        background: var(--bg-secondary);
         padding: 16px 20px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         gap: 12px;
         align-items: center;
@@ -120,9 +125,11 @@
     .filter-bar select,
     .filter-bar input {
         padding: 8px 12px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border-color);
         border-radius: 6px;
         font-size: 14px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
     }
     
     .btn {
@@ -162,13 +169,15 @@
     }
     
     .modal-content {
-        background: white;
+        background: var(--bg-secondary);
         border-radius: 8px;
         padding: 24px;
         max-width: 600px;
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
     }
     
     .form-group {
@@ -187,9 +196,11 @@
     .form-group textarea {
         width: 100%;
         padding: 10px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--border-color);
         border-radius: 6px;
         font-size: 14px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
     }
     
     .company-details {
@@ -201,13 +212,14 @@
     
     .detail-item {
         padding: 12px;
-        background: #f9fafb;
+        background: var(--bg-tertiary);
         border-radius: 6px;
+        border: 1px solid var(--border-color);
     }
     
     .detail-label {
         font-size: 12px;
-        color: #6b7280;
+        color: var(--text-secondary);
         font-weight: 600;
         text-transform: uppercase;
         margin-bottom: 4px;
@@ -215,14 +227,14 @@
     
     .detail-value {
         font-size: 14px;
-        color: #111827;
+        color: var(--text-primary);
         font-weight: 500;
     }
     
     .tabs {
         display: flex;
         gap: 8px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-color);
         margin: 20px 0;
     }
     
@@ -233,7 +245,7 @@
         border-bottom: 2px solid transparent;
         cursor: pointer;
         font-weight: 500;
-        color: #6b7280;
+        color: var(--text-secondary);
     }
     
     .tab.active {
@@ -251,9 +263,10 @@
     
     .timeline-item {
         padding: 12px;
-        border-left: 2px solid #e5e7eb;
+        border-left: 2px solid var(--border-color);
         margin-bottom: 12px;
         position: relative;
+        color: var(--text-primary);
     }
     
     .timeline-item::before {

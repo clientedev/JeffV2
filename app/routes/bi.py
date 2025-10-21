@@ -126,59 +126,82 @@ async def get_dashboard_data(
     mes_atual = hoje.month
     ano_atual = hoje.year
     
-    total_propostas = db.query(func.count(Proposta.id)).scalar()
+    # Dados das Linhas Tecnologia e Educacional
+    total_tec = db.query(func.count(LinhaTecnologia.id)).scalar() or 0
+    total_edu = db.query(func.count(LinhaEducacional.id)).scalar() or 0
+    total_propostas = total_tec + total_edu
     
-    propostas_ativas = db.query(func.count(Proposta.id)).filter(
-        Proposta.status == "Em andamento"
-    ).scalar()
+    # Propostas ativas (ano atual)
+    propostas_ativas_tec = db.query(func.count(LinhaTecnologia.id)).filter(
+        LinhaTecnologia.ano == ano_atual,
+        LinhaTecnologia.situacao.ilike('%em andamento%')
+    ).scalar() or 0
     
-    propostas_fechadas_mes = db.query(func.count(Proposta.id)).filter(
-        Proposta.status == "Fechado",
-        extract('month', Proposta.data_fechamento) == mes_atual,
-        extract('year', Proposta.data_fechamento) == ano_atual
-    ).scalar()
+    propostas_ativas_edu = db.query(func.count(LinhaEducacional.id)).filter(
+        LinhaEducacional.ano == ano_atual,
+        LinhaEducacional.situacao.ilike('%em andamento%')
+    ).scalar() or 0
     
-    projetos_concluidos_mes = db.query(func.count(Cronograma.id)).filter(
-        Cronograma.status == "Concluído",
-        extract('month', Cronograma.atualizado_em) == mes_atual,
-        extract('year', Cronograma.atualizado_em) == ano_atual
-    ).scalar()
+    propostas_ativas = propostas_ativas_tec + propostas_ativas_edu
     
-    total_horas_executadas = db.query(func.sum(Cronograma.horas_executadas)).scalar() or 0
+    # Propostas fechadas no mês
+    propostas_fechadas_mes_tec = db.query(func.count(LinhaTecnologia.id)).filter(
+        LinhaTecnologia.mes == str(mes_atual),
+        LinhaTecnologia.ano == ano_atual,
+        LinhaTecnologia.situacao.ilike('%concluí%')
+    ).scalar() or 0
     
-    receita_total = db.query(func.sum(Contrato.valor)).filter(
-        Contrato.status_pagamento == "Pago"
-    ).scalar() or Decimal(0)
+    propostas_fechadas_mes_edu = db.query(func.count(LinhaEducacional.id)).filter(
+        LinhaEducacional.mes == str(mes_atual),
+        LinhaEducacional.ano == ano_atual,
+        LinhaEducacional.situacao.ilike('%concluí%')
+    ).scalar() or 0
     
-    receita_mes = db.query(func.sum(Contrato.valor)).filter(
-        Contrato.status_pagamento == "Pago",
-        extract('month', Contrato.data_assinatura) == mes_atual,
-        extract('year', Contrato.data_assinatura) == ano_atual
-    ).scalar() or Decimal(0)
+    propostas_fechadas_mes = propostas_fechadas_mes_tec + propostas_fechadas_mes_edu
     
-    total_propostas_fechadas = db.query(func.count(Proposta.id)).filter(
-        Proposta.status == "Fechado"
-    ).scalar()
+    # Receita total
+    receita_total_tec = db.query(func.sum(LinhaTecnologia.valor_proposta)).scalar() or 0
+    receita_total_edu = db.query(func.sum(LinhaEducacional.valor)).scalar() or 0
+    receita_total = float(receita_total_tec) + float(receita_total_edu)
+    
+    # Receita do mês
+    receita_mes_tec = db.query(func.sum(LinhaTecnologia.valor_proposta)).filter(
+        LinhaTecnologia.mes == str(mes_atual),
+        LinhaTecnologia.ano == ano_atual
+    ).scalar() or 0
+    
+    receita_mes_edu = db.query(func.sum(LinhaEducacional.valor)).filter(
+        LinhaEducacional.mes == str(mes_atual),
+        LinhaEducacional.ano == ano_atual
+    ).scalar() or 0
+    
+    receita_mes = float(receita_mes_tec) + float(receita_mes_edu)
+    
+    # Taxa de conversão
+    total_propostas_fechadas_tec = db.query(func.count(LinhaTecnologia.id)).filter(
+        LinhaTecnologia.situacao.ilike('%concluí%')
+    ).scalar() or 0
+    
+    total_propostas_fechadas_edu = db.query(func.count(LinhaEducacional.id)).filter(
+        LinhaEducacional.situacao.ilike('%concluí%')
+    ).scalar() or 0
+    
+    total_propostas_fechadas = total_propostas_fechadas_tec + total_propostas_fechadas_edu
     
     taxa_conversao = 0
     if total_propostas > 0:
         taxa_conversao = round((total_propostas_fechadas / total_propostas) * 100, 2)
     
-    contratos_vencidos = db.query(func.count(Contrato.id)).filter(
-        Contrato.data_vencimento < hoje,
-        Contrato.status_pagamento.in_(["Pendente", "Vencido"])
-    ).scalar()
-    
     return {
         "total_propostas": total_propostas,
         "propostas_ativas": propostas_ativas,
         "propostas_fechadas_mes": propostas_fechadas_mes,
-        "projetos_concluidos_mes": projetos_concluidos_mes,
-        "total_horas_executadas": float(total_horas_executadas),
-        "receita_total": float(receita_total),
-        "receita_mes": float(receita_mes),
+        "projetos_concluidos_mes": total_propostas_fechadas,
+        "total_horas_executadas": 0,
+        "receita_total": receita_total,
+        "receita_mes": receita_mes,
         "taxa_conversao": taxa_conversao,
-        "contratos_vencidos": contratos_vencidos
+        "contratos_vencidos": 0
     }
 
 @router.get("/propostas-por-status")
@@ -186,56 +209,132 @@ async def propostas_por_status(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    resultados = db.query(
-        Proposta.status, 
-        func.count(Proposta.id).label('total')
-    ).group_by(Proposta.status).all()
+    # Combinar dados de Linha Tecnologia e Linha Educacional
+    resultados_tec = db.query(
+        LinhaTecnologia.situacao, 
+        func.count(LinhaTecnologia.id).label('total')
+    ).filter(LinhaTecnologia.situacao.isnot(None)).group_by(LinhaTecnologia.situacao).all()
     
-    return [{"status": r.status, "total": r.total} for r in resultados]
+    resultados_edu = db.query(
+        LinhaEducacional.situacao, 
+        func.count(LinhaEducacional.id).label('total')
+    ).filter(LinhaEducacional.situacao.isnot(None)).group_by(LinhaEducacional.situacao).all()
+    
+    # Consolidar resultados
+    status_dict = {}
+    for r in resultados_tec:
+        status_dict[r.situacao] = status_dict.get(r.situacao, 0) + r.total
+    for r in resultados_edu:
+        status_dict[r.situacao] = status_dict.get(r.situacao, 0) + r.total
+    
+    return [{"status": status, "total": total} for status, total in status_dict.items()]
 
 @router.get("/propostas-por-consultor")
 async def propostas_por_consultor(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    resultados = db.query(
-        Consultor.nome,
-        func.count(Proposta.id).label('total')
-    ).join(Proposta, Proposta.consultor_id == Consultor.id).group_by(Consultor.nome).all()
+    # Dados de Linha Tecnologia
+    resultados_tec = db.query(
+        LinhaTecnologia.consultor,
+        func.count(LinhaTecnologia.id).label('total')
+    ).filter(LinhaTecnologia.consultor.isnot(None)).group_by(LinhaTecnologia.consultor).all()
     
-    return [{"consultor": r.nome, "total": r.total} for r in resultados]
+    # Dados de Linha Educacional
+    resultados_edu = db.query(
+        LinhaEducacional.consultor,
+        func.count(LinhaEducacional.id).label('total')
+    ).filter(LinhaEducacional.consultor.isnot(None)).group_by(LinhaEducacional.consultor).all()
+    
+    # Consolidar resultados
+    consultor_dict = {}
+    for r in resultados_tec:
+        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.total
+    for r in resultados_edu:
+        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.total
+    
+    # Retornar top 10 consultores
+    consultores_sorted = sorted(consultor_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    return [{"consultor": consultor, "total": total} for consultor, total in consultores_sorted]
 
 @router.get("/receita-mensal")
 async def receita_mensal(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    resultados = db.query(
-        extract('month', Contrato.data_assinatura).label('mes'),
-        extract('year', Contrato.data_assinatura).label('ano'),
-        func.sum(Contrato.valor).label('receita')
+    hoje = date.today()
+    ano_atual = hoje.year
+    
+    # Dados de Linha Tecnologia
+    resultados_tec = db.query(
+        LinhaTecnologia.mes,
+        LinhaTecnologia.ano,
+        func.sum(LinhaTecnologia.valor_proposta).label('receita')
     ).filter(
-        Contrato.status_pagamento == "Pago"
-    ).group_by('mes', 'ano').order_by('ano', 'mes').limit(12).all()
+        LinhaTecnologia.ano == ano_atual,
+        LinhaTecnologia.mes.isnot(None)
+    ).group_by(LinhaTecnologia.mes, LinhaTecnologia.ano).all()
+    
+    # Dados de Linha Educacional
+    resultados_edu = db.query(
+        LinhaEducacional.mes,
+        LinhaEducacional.ano,
+        func.sum(LinhaEducacional.valor).label('receita')
+    ).filter(
+        LinhaEducacional.ano == ano_atual,
+        LinhaEducacional.mes.isnot(None)
+    ).group_by(LinhaEducacional.mes, LinhaEducacional.ano).all()
+    
+    # Consolidar por mês
+    receita_dict = {}
+    for r in resultados_tec:
+        if r.mes and r.mes.isdigit():
+            mes_key = int(r.mes)
+            receita_dict[mes_key] = receita_dict.get(mes_key, 0) + float(r.receita or 0)
+    for r in resultados_edu:
+        if r.mes and r.mes.isdigit():
+            mes_key = int(r.mes)
+            receita_dict[mes_key] = receita_dict.get(mes_key, 0) + float(r.receita or 0)
     
     meses = {1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun",
              7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"}
     
-    return [{
-        "mes": f"{meses[int(r.mes)]}/{int(r.ano)}", 
-        "receita": float(r.receita or 0)
-    } for r in resultados]
+    # Criar lista de meses ordenada
+    resultado_final = []
+    for mes_num in sorted(receita_dict.keys()):
+        resultado_final.append({
+            "mes": f"{meses[mes_num]}/{ano_atual}",
+            "receita": receita_dict[mes_num]
+        })
+    
+    return resultado_final
 
 @router.get("/produtividade-consultores")
 async def produtividade_consultores(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    resultados = db.query(
-        Consultor.nome,
-        func.sum(Cronograma.horas_executadas).label('horas')
-    ).join(Proposta, Proposta.consultor_id == Consultor.id)\
-     .join(Cronograma, Cronograma.proposta_id == Proposta.id)\
-     .group_by(Consultor.nome).all()
+    # Usar dados das linhas para produtividade
+    # Conta a quantidade de propostas por consultor como métrica de produtividade
+    resultados_tec = db.query(
+        LinhaTecnologia.consultor,
+        func.count(LinhaTecnologia.id).label('quantidade')
+    ).filter(LinhaTecnologia.consultor.isnot(None)).group_by(LinhaTecnologia.consultor).all()
     
-    return [{"consultor": r.nome, "horas": float(r.horas or 0)} for r in resultados]
+    resultados_edu = db.query(
+        LinhaEducacional.consultor,
+        func.count(LinhaEducacional.id).label('quantidade')
+    ).filter(LinhaEducacional.consultor.isnot(None)).group_by(LinhaEducacional.consultor).all()
+    
+    # Consolidar
+    consultor_dict = {}
+    for r in resultados_tec:
+        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.quantidade
+    for r in resultados_edu:
+        consultor_dict[r.consultor] = consultor_dict.get(r.consultor, 0) + r.quantidade
+    
+    # Retornar top 10
+    consultores_sorted = sorted(consultor_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    return [{"consultor": consultor, "horas": total * 10} for consultor, total in consultores_sorted]

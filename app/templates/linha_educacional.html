@@ -2,6 +2,71 @@
 
 {% block title %}Linha Educacional - Sistema de Relacionamento{% endblock %}
 
+{% block extra_css %}
+<style>
+    .table {
+        color: var(--text-primary);
+    }
+    .table thead th {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    .table tbody td {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    .table-hover tbody tr:hover td {
+        background: var(--bg-hover);
+    }
+    .card {
+        background: var(--bg-secondary);
+        border-color: var(--border-color);
+    }
+    .card-body {
+        background: var(--bg-secondary);
+    }
+    .form-control, .form-select {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    .form-control:focus, .form-select:focus {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--accent-primary);
+    }
+    .modal-content {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    .modal-header, .modal-footer {
+        border-color: var(--border-color);
+    }
+    .form-label {
+        color: var(--text-primary);
+    }
+    .text-muted {
+        color: var(--text-secondary) !important;
+    }
+    .pagination .page-link {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    .pagination .page-item.active .page-link {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+    .pagination .page-item.disabled .page-link {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
