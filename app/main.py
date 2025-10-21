@@ -9,7 +9,7 @@ import os
 from app.database import get_db, init_db, engine
 from app.models.models import Usuario
 from app.auth import get_current_user
-from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional, consultor_detalhes, relatorios_analiticos, pipeline
+from app.routes import auth, empresas, consultores, propostas, cronogramas, contratos, bi, importacao, chatbot, relatorios, alertas, contatos, linha_tecnologia, linha_educacional, consultor_detalhes, relatorios_analiticos, pipeline, gerenciar_etapas
 from app.routes import prospeccao as prospeccao_routes
 
 app = FastAPI(
@@ -46,6 +46,7 @@ app.include_router(prospeccao_routes.router, prefix="/api/prospeccao", tags=["Pr
 app.include_router(consultor_detalhes.router, prefix="/api/consultores", tags=["Consultores Detalhes"])
 app.include_router(relatorios_analiticos.router, prefix="/api/relatorios-analiticos", tags=["Relatórios Analíticos"])
 app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline Kanban"])
+app.include_router(gerenciar_etapas.router, prefix="/api/gerenciar-etapas", tags=["Gerenciar Etapas"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -145,6 +146,10 @@ async def consultor_detalhe_page(request: Request):
 @app.get("/pipeline", response_class=HTMLResponse)
 async def pipeline_page(request: Request):
     return templates.TemplateResponse("pipeline.html", {"request": request})
+
+@app.get("/gerenciar-etapas", response_class=HTMLResponse)
+async def gerenciar_etapas_page(request: Request):
+    return templates.TemplateResponse("gerenciar_etapas.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

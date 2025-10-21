@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Etapas - Área do Consultor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .stats-card h5 {
+        color: var(--accent-primary);
+        margin-bottom: 10px;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+    .stats-card .value {
+        font-size: 32px;
+        font-weight: bold;
+        color: var(--text-primary);
+    }
+    .projeto-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .projeto-card:hover {
+        background: var(--bg-hover);
+        border-color: var(--accent-primary);
+    }
+    .projeto-card.selecionado {
+        border-color: var(--accent-primary);
+        background: var(--bg-hover);
+    }
+    .badge-status {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .status-concluido { background: #28a745; color: white; }
+    .status-em-andamento { background: #007bff; color: white; }
+    .status-aguardando { background: #ffc107; color: black; }
+    .status-cancelado { background: #dc3545; color: white; }
+    .status-prospeccao { background: #6c757d; color: white; }
+    
+    .campo-etapa {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    .campo-etapa label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    .campo-etapa input,
+    .campo-etapa select,
+    .campo-etapa textarea {
+        width: 100%;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 8px;
+    }
+    .campo-etapa input:focus,
+    .campo-etapa select:focus,
+    .campo-etapa textarea:focus {
+        border-color: var(--accent-primary);
+        outline: none;
+    }
+    .section-title {
+        color: var(--accent-primary);
+        font-size: 18px;
+        font-weight: 600;
+        margin: 20px 0 10px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border-color);
+    }
+    .detalhes-projeto {
+        display: none;
+    }
+    .detalhes-projeto.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Área do Consultor - Gerenciar Etapas</h2>
+            <p class="text-muted">Gerencie suas empresas e atualize etapas de projetos</p>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4" id="estatisticas">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h5>Total de Projetos</h5>
+                <div class="value" id="totalProjetos">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h5>Valor Total</h5>
+                <div class="value" id="valorTotal">R$ 0,00</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h5>Em Andamento</h5>
+                <div class="value" id="emAndamento">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h5>Concluídos</h5>
+                <div class="value" id="concluidos">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Lista de Projetos -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Meus Projetos</h5>
+                    <input type="text" id="searchProjet os" class="form-control form-control-sm mt-2" placeholder="Buscar empresa...">
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div id="listaProjetos">
+                        <p class="text-center text-muted">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalhes e Edição -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 id="tituloDetalhes">Selecione um projeto</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div id="detalhesVazio" class="text-center text-muted py-5">
+                        <i class="bi bi-folder2-open" style="font-size: 48px;"></i>
+                        <p class="mt-3">Selecione um projeto à esquerda para ver os detalhes e gerenciar etapas</p>
+                    </div>
+                    
+                    <div id="detalhesProjeto" class="detalhes-projeto">
+                        <div class="section-title">Informações Básicas</div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Empresa</label>
+                                    <input type="text" id="empresa" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Tipo de Programa</label>
+                                    <input type="text" id="tipo_programa" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Nº Proposta</label>
+                                    <input type="text" id="numero_proposta" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Valor da Proposta</label>
+                                    <input type="text" id="valor_proposta" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Status da Etapa</label>
+                                    <select id="status_etapa" class="campo-editavel" data-campo="status_etapa">
+                                        <option value="">Selecione...</option>
+                                        <option value="PROSPECÇÃO">Prospecção</option>
+                                        <option value="EM ANDAMENTO">Em Andamento</option>
+                                        <option value="CONCLUÍDO">Concluído</option>
+                                        <option value="CANCELADO">Cancelado</option>
+                                        <option value="AGUARDANDO ACEITE">Aguardando Aceite</option>
+                                        <option value="AGUARDANDO SALDO">Aguardando Saldo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Situação</label>
+                                    <select id="situacao" class="campo-editavel" data-campo="situacao">
+                                        <option value="">Selecione...</option>
+                                        <option value="PREVISTO">Previsto</option>
+                                        <option value="FATURADO">Faturado</option>
+                                        <option value="CONCLUÍDO">Concluído</option>
+                                        <option value="CANCELADO">Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Início</label>
+                                    <input type="date" id="data_inicio" class="campo-editavel" data-campo="data_inicio">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Término</label>
+                                    <input type="date" id="data_termino" class="campo-editavel" data-campo="data_termino">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Contratos e Documentos</div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Dados Sócios Informados</label>
+                                    <select id="dados_socios_informados" class="campo-editavel" data-campo="dados_socios_informados">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Contrato Enviado à Empresa</label>
+                                    <select id="contrato_enviado_empresa" class="campo-editavel" data-campo="contrato_enviado_empresa">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Contrato Assinado pela Empresa</label>
+                                    <select id="contrato_assinado_empresa" class="campo-editavel" data-campo="contrato_assinado_empresa">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Data Contrato Assinado SENAI</label>
+                                    <input type="date" id="data_contrato_assinado_senai" class="campo-editavel" data-campo="data_contrato_assinado_senai">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">SGT e Plataformas</div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Cadastro SGT</label>
+                                    <input type="date" id="data_cadastro_sgt" class="campo-editavel" data-campo="data_cadastro_sgt">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Upload SGT</label>
+                                    <input type="date" id="data_upload_sgt" class="campo-editavel" data-campo="data_upload_sgt">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Aceite SGT</label>
+                                    <input type="date" id="data_aceite_sgt" class="campo-editavel" data-campo="data_aceite_sgt">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Cadastro Plataforma OK?</label>
+                                    <select id="cadastro_plataforma_ok" class="campo-editavel" data-campo="cadastro_plataforma_ok">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Data Envio Relatório T1</label>
+                                    <input type="date" id="data_envio_relatorio_t1" class="campo-editavel" data-campo="data_envio_relatorio_t1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Cobranças e Financeiro</div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Data Cobrança Empresa</label>
+                                    <input type="date" id="data_cobranca_empresa" class="campo-editavel" data-campo="data_cobranca_empresa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Data Cobrança SEBRAE</label>
+                                    <input type="date" id="data_cobranca_sebrae" class="campo-editavel" data-campo="data_cobranca_sebrae">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Contrato SEBRAE Enviado</label>
+                                    <select id="contrato_sebrae_enviado" class="campo-editavel" data-campo="contrato_sebrae_enviado">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Data Resposta SEBRAE</label>
+                                    <input type="date" id="data_resposta_sebrae" class="campo-editavel" data-campo="data_resposta_sebrae">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Relatórios e Entregas</div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Relatório Priorização Enviado</label>
+                                    <select id="relatorio_priorizacao_enviado" class="campo-editavel" data-campo="relatorio_priorizacao_enviado">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Relatório Smart Factory</label>
+                                    <select id="relatorio_smart_factory" class="campo-editavel" data-campo="relatorio_smart_factory">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Relatório Final Enviado</label>
+                                    <select id="relatorio_final_enviado" class="campo-editavel" data-campo="relatorio_final_enviado">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Relatório Educacional Enviado</label>
+                                    <select id="relatorio_educacional_enviado" class="campo-editavel" data-campo="relatorio_educacional_enviado">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Reuniões e Eventos</div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Reunião Kick-off Confirmada</label>
+                                    <select id="reuniao_kickoff_confirmada" class="campo-editavel" data-campo="reuniao_kickoff_confirmada">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Reunião Final Agendada</label>
+                                    <select id="reuniao_final_agendada" class="campo-editavel" data-campo="reuniao_final_agendada">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Presencial</label>
+                                    <select id="presencial" class="campo-editavel" data-campo="presencial">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-etapa">
+                                    <label>Gratuidade?</label>
+                                    <select id="gratuidade" class="campo-editavel" data-campo="gratuidade">
+                                        <option value="">Selecione...</option>
+                                        <option value="SIM">Sim</option>
+                                        <option value="NÃO">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Finalizações</div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Conclusão SGT</label>
+                                    <input type="date" id="data_conclusao_sgt" class="campo-editavel" data-campo="data_conclusao_sgt">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Prestação de Contas</label>
+                                    <input type="date" id="data_prestacao_contas" class="campo-editavel" data-campo="data_prestacao_contas">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="campo-etapa">
+                                    <label>Data Pesquisa Satisfação</label>
+                                    <input type="date" id="data_pesquisa_satisfacao" class="campo-editavel" data-campo="data_pesquisa_satisfacao">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Observações</div>
+                        <div class="campo-etapa">
+                            <label>Observações</label>
+                            <textarea id="observacoes" rows="4" class="campo-editavel" data-campo="observacoes"></textarea>
+                        </div>
+
+                        <div class="mt-3 text-end">
+                            <button class="btn btn-primary" onclick="salvarAlteracoes()">
+                                <i class="bi bi-save"></i> Salvar Todas as Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let projetoAtual = null;
+let camposAlterados = {};
+
+async function carregarEstatisticas() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch('/api/gerenciar-etapas/estatisticas', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const stats = await response.json();
+        
+        document.getElementById('totalProjetos').textContent = stats.total_projetos;
+        document.getElementById('valorTotal').textContent = 
+            'R$ ' + stats.valor_total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        
+        const emAndamento = stats.por_status.find(s => s.status === 'EM ANDAMENTO');
+        const concluidos = stats.por_status.find(s => s.status === 'CONCLUÍDO');
+        
+        document.getElementById('emAndamento').textContent = emAndamento ? emAndamento.quantidade : 0;
+        document.getElementById('concluidos').textContent = concluidos ? concluidos.quantidade : 0;
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+async function carregarProjetos(search = '') {
+    try {
+        const token = localStorage.getItem('access_token');
+        let url = '/api/gerenciar-etapas/meus-projetos?page_size=100';
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        const lista = document.getElementById('listaProjetos');
+        
+        if (data.data.length === 0) {
+            lista.innerHTML = '<p class="text-center text-muted">Nenhum projeto encontrado</p>';
+            return;
+        }
+        
+        lista.innerHTML = data.data.map(p => {
+            const statusClass = getStatusClass(p.status_etapa);
+            return `
+                <div class="projeto-card" onclick="selecionarProjeto(${p.id})">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${p.empresa || 'Sem nome'}</strong>
+                            <div class="small text-muted">${p.tipo_programa || 'Sem tipo'}</div>
+                            <div class="small text-muted">Proposta: ${p.numero_proposta || '-'}</div>
+                        </div>
+                        <span class="badge-status ${statusClass}">${p.status_etapa || 'Sem status'}</span>
+                    </div>
+                    ${p.valor_proposta ? `<div class="mt-2 small">R$ ${parseFloat(p.valor_proposta).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Erro ao carregar projetos:', error);
+    }
+}
+
+function getStatusClass(status) {
+    if (!status) return 'status-prospeccao';
+    const s = status.toUpperCase();
+    if (s.includes('CONCLU')) return 'status-concluido';
+    if (s.includes('ANDAMENTO')) return 'status-em-andamento';
+    if (s.includes('AGUARDANDO')) return 'status-aguardando';
+    if (s.includes('CANCELADO')) return 'status-cancelado';
+    return 'status-prospeccao';
+}
+
+async function selecionarProjeto(id) {
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`/api/gerenciar-etapas/projeto/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            alert('Erro ao carregar projeto');
+            return;
+        }
+        
+        projetoAtual = await response.json();
+        camposAlterados = {};
+        
+        // Destacar projeto selecionado
+        document.querySelectorAll('.projeto-card').forEach(card => {
+            card.classList.remove('selecionado');
+        });
+        event.currentTarget.classList.add('selecionado');
+        
+        // Mostrar detalhes
+        document.getElementById('detalhesVazio').style.display = 'none';
+        document.getElementById('detalhesProjeto').classList.add('show');
+        document.getElementById('tituloDetalhes').textContent = projetoAtual.empresa;
+        
+        // Preencher campos
+        document.getElementById('empresa').value = projetoAtual.empresa || '';
+        document.getElementById('tipo_programa').value = projetoAtual.tipo_programa || '';
+        document.getElementById('numero_proposta').value = projetoAtual.numero_proposta || '';
+        document.getElementById('valor_proposta').value = projetoAtual.valor_proposta ? 
+            'R$ ' + parseFloat(projetoAtual.valor_proposta).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '';
+        document.getElementById('status_etapa').value = projetoAtual.status_etapa || '';
+        document.getElementById('situacao').value = projetoAtual.situacao || '';
+        document.getElementById('data_inicio').value = projetoAtual.data_inicio || '';
+        document.getElementById('data_termino').value = projetoAtual.data_termino || '';
+        
+        // Campos de controle
+        document.getElementById('dados_socios_informados').value = projetoAtual.dados_socios_informados || '';
+        document.getElementById('contrato_enviado_empresa').value = projetoAtual.contrato_enviado_empresa || '';
+        document.getElementById('contrato_assinado_empresa').value = projetoAtual.contrato_assinado_empresa || '';
+        document.getElementById('data_contrato_assinado_senai').value = projetoAtual.data_contrato_assinado_senai || '';
+        document.getElementById('data_cadastro_sgt').value = projetoAtual.data_cadastro_sgt || '';
+        document.getElementById('data_upload_sgt').value = projetoAtual.data_upload_sgt || '';
+        document.getElementById('data_aceite_sgt').value = projetoAtual.data_aceite_sgt || '';
+        document.getElementById('data_envio_relatorio_t1').value = projetoAtual.data_envio_relatorio_t1 || '';
+        document.getElementById('data_cobranca_empresa').value = projetoAtual.data_cobranca_empresa || '';
+        document.getElementById('cadastro_plataforma_ok').value = projetoAtual.cadastro_plataforma_ok || '';
+        document.getElementById('data_cobranca_sebrae').value = projetoAtual.data_cobranca_sebrae || '';
+        document.getElementById('contrato_sebrae_enviado').value = projetoAtual.contrato_sebrae_enviado || '';
+        document.getElementById('data_resposta_sebrae').value = projetoAtual.data_resposta_sebrae || '';
+        document.getElementById('relatorio_priorizacao_enviado').value = projetoAtual.relatorio_priorizacao_enviado || '';
+        document.getElementById('relatorio_smart_factory').value = projetoAtual.relatorio_smart_factory || '';
+        document.getElementById('relatorio_final_enviado').value = projetoAtual.relatorio_final_enviado || '';
+        document.getElementById('relatorio_educacional_enviado').value = projetoAtual.relatorio_educacional_enviado || '';
+        document.getElementById('reuniao_kickoff_confirmada').value = projetoAtual.reuniao_kickoff_confirmada || '';
+        document.getElementById('reuniao_final_agendada').value = projetoAtual.reuniao_final_agendada || '';
+        document.getElementById('presencial').value = projetoAtual.presencial || '';
+        document.getElementById('gratuidade').value = projetoAtual.gratuidade || '';
+        document.getElementById('data_conclusao_sgt').value = projetoAtual.data_conclusao_sgt || '';
+        document.getElementById('data_prestacao_contas').value = projetoAtual.data_prestacao_contas || '';
+        document.getElementById('data_pesquisa_satisfacao').value = projetoAtual.data_pesquisa_satisfacao || '';
+        document.getElementById('observacoes').value = projetoAtual.observacoes || '';
+        
+    } catch (error) {
+        console.error('Erro ao selecionar projeto:', error);
+        alert('Erro ao carregar detalhes do projeto');
+    }
+}
+
+// Rastrear mudanças nos campos editáveis
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.campo-editavel').forEach(campo => {
+        campo.addEventListener('change', function() {
+            const nomeCampo = this.dataset.campo;
+            camposAlterados[nomeCampo] = this.value;
+        });
+    });
+});
+
+async function salvarAlteracoes() {
+    if (!projetoAtual) {
+        alert('Nenhum projeto selecionado');
+        return;
+    }
+    
+    if (Object.keys(camposAlterados).length === 0) {
+        alert('Nenhuma alteração detectada');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        
+        // Salvar cada campo alterado
+        for (const [campo, valor] of Object.entries(camposAlterados)) {
+            await fetch(`/api/gerenciar-etapas/projeto/${projetoAtual.id}/atualizar-campo`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ campo, valor })
+            });
+        }
+        
+        alert('Alterações salvas com sucesso!');
+        camposAlterados = {};
+        
+        // Recarregar dados
+        await carregarProjetos();
+        await carregarEstatisticas();
+        await selecionarProjeto(projetoAtual.id);
+        
+    } catch (error) {
+        console.error('Erro ao salvar alterações:', error);
+        alert('Erro ao salvar alterações');
+    }
+}
+
+// Busca de projetos
+let searchTimeout;
+document.getElementById('searchProjetos').addEventListener('keyup', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        carregarProjetos(this.value);
+    }, 500);
+});
+
+// Carregar dados iniciais
+carregarEstatisticas();
+carregarProjetos();
+</script>
+{% endblock %}
