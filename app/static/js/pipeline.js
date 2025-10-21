@@ -19,20 +19,36 @@ async function loadStages() {
 }
 
 async function loadCompanies() {
-    const linha = document.getElementById('filterLinha').value;
-    const consultor = document.getElementById('filterConsultor').value;
-    
-    let url = '/api/pipeline/companies?';
-    if (linha) url += `linha=${linha}&`;
-    if (consultor) url += `consultor=${consultor}&`;
-    
-    const response = await fetch(url, {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+    try {
+        const linha = document.getElementById('filterLinha').value;
+        const consultor = document.getElementById('filterConsultor').value;
+        
+        let url = '/api/pipeline/companies?';
+        if (linha) url += `linha=${linha}&`;
+        if (consultor) url += `consultor=${consultor}&`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    });
-    companies = await response.json();
-    renderKanbanBoard();
+        
+        const data = await response.json();
+        companies = Array.isArray(data) ? data : [];
+        renderKanbanBoard();
+    } catch (error) {
+        console.error('Erro ao carregar empresas:', error);
+        companies = [];
+        renderKanbanBoard();
+    }
 }
 
 function renderKanbanBoard() {

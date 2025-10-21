@@ -431,6 +431,38 @@ def importar_alocacoes_cronograma(db: Session):
         logger.error(f"Erro ao importar alocações: {e}")
         db.rollback()
 
+def seed_pipeline_and_prospeccao():
+    """Importa dados para pipeline e prospecção se ainda não foram importados"""
+    try:
+        from app.import_prospeccao_pipeline import importar_para_pipeline, importar_para_prospeccao
+        from app.models.models import CompanyPipeline, Prospeccao
+        
+        db = SessionLocal()
+        try:
+            # Verificar se já foram importados
+            pipeline_count = db.query(CompanyPipeline).count()
+            prospeccao_count = db.query(Prospeccao).filter(Prospeccao.dados_iniciais == False).count()
+            
+            if pipeline_count == 0:
+                logger.info("Importando dados para pipeline...")
+                importar_para_pipeline(db)
+            else:
+                logger.info("Pipeline já foi importado anteriormente. Pulando...")
+            
+            if prospeccao_count == 0:
+                logger.info("Importando dados para prospecção...")
+                importar_para_prospeccao(db)
+            else:
+                logger.info("Prospecção já foi importada anteriormente. Pulando...")
+                
+        except Exception as e:
+            logger.error(f"Erro ao importar pipeline/prospecção: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Pipeline/Prospecção não disponível: {e}")
+
 def seed_all_data():
     """Executa todas as importações de dados iniciais"""
     db = SessionLocal()
@@ -447,6 +479,9 @@ def seed_all_data():
         logger.error(f"Erro durante importação: {e}")
     finally:
         db.close()
+    
+    # Importar pipeline e prospecção
+    seed_pipeline_and_prospeccao()
 
 if __name__ == "__main__":
     seed_all_data()

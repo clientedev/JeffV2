@@ -1,96 +1,243 @@
-# Sistema de relacionamento com a industria
+# Sistema de Relacionamento com a Indústria 1.03
 
-## Overview
+Sistema web completo de gerenciamento de relacionamento com empresas, desenvolvido em FastAPI + PostgreSQL.
 
-This is a comprehensive industrial relationship management system built with FastAPI and PostgreSQL. The system unifies business data from spreadsheets into a centralized platform for managing companies, consultants, prospecting, schedules, contracts, and business intelligence dashboards. It serves consulting firms by tracking client proposals, project timelines, consultant workloads, and financial contracts with automated alerts and reporting capabilities. 
+## 📊 Estado Atual do Sistema
 
-**Latest Update (October 2025)**: The system now includes two complete business lines (Linha Tecnologia and Linha Educacional) with full CRUD operations, advanced filtering, pagination, and consolidated dashboard statistics. The system manages 2,940 technology records and 266 educational records imported from Excel spreadsheets with 120+ and 42 columns respectively.
+### ✅ Sistema Totalmente Funcional
+- FastAPI rodando na porta 5000
+- PostgreSQL configurado e populado
+- 23 tabelas criadas automaticamente
+- Dados importados e permanentes
 
-## User Preferences
+### 📈 Dados no Sistema
 
-Preferred communication style: Simple, everyday language.
+- **993 empresas** cadastradas
+- **20 consultores** ativos
+- **3.003 contatos** de empresas
+- **2.940 registros** de linha tecnologia
+- **266 registros** de linha educacional
+- **4.967 alocações** de cronograma
+- **925 empresas** no pipeline kanban (NOVO!)
+- **817 empresas** na prospecção (NOVO!)
 
-## System Architecture
+### 🔐 Acesso ao Sistema
 
-### Backend Architecture
+**Credenciais padrão:**
+- Email: `admin@sistema.com`
+- Senha: `admin123`
 
-**Framework**: FastAPI (Python) for high performance, automatic API documentation, type safety with Pydantic, and async support.
-**Authentication**: JWT-based authentication using `python-jose` with bcrypt password hashing and OAuth2 password bearer tokens with 480-minute expiration.
-**Database ORM**: SQLAlchemy with PostgreSQL, configured with a connection pool for reliability.
-**Role-Based Access Control**: Three-tier permission system (Admin, Consultor, Financeiro, Visualizador) implemented with function decorators and database-linked user roles.
+## 🎯 Funcionalidades Principais
 
-### Frontend Architecture
+### 1. Dashboard
+- Visão geral de propostas, contratos e receita
+- Gráficos de produtividade de consultores
+- Análise de propostas por status
 
-**Template Engine**: Jinja2 templates with server-side rendering for simplified development and security.
-**Design System**: Custom CSS with a dark theme using CSS variables for consistency.
-**Visualization**: Plotly.js for interactive BI dashboards with responsive design and dark theme support.
-**Client Communication**: Vanilla JavaScript with Fetch API for direct API interactions, using bearer tokens stored in localStorage for authentication.
+### 2. Gestão de Empresas
+- Cadastro completo de empresas
+- Histórico de relacionamento
+- Vinculação com propostas e contratos
 
-### Data Models
+### 3. Gestão de Consultores
+- Perfil de consultores
+- Produtividade e alocação
+- Histórico de projetos
 
-**Core Entities**: Usuario, Empresa, Consultor, Proposta, Cronograma, AlocacaoCronograma, Contrato, Feriado, Contato, LinhaTecnologia, LinhaEducacional.
-**Relationships**: One-to-Many relationships exist between core entities (e.g., Empresa to Propostas). Consultant allocations are tracked daily. Initial data imported from Excel is marked `dados_iniciais=True` and protected from modification via API.
+### 4. Pipeline Kanban (NOVO!)
+- Visualização em quadro Kanban
+- 7 estágios: Prospecção → Proposta Enviada → Negociação → Contrato Assinado → Em Execução → Concluído → Perdido
+- 925 empresas distribuídas por estágio
+- Drag & Drop para mover empresas entre estágios
+- Histórico completo de movimentações
+- Alertas para empresas paradas há mais de 7 dias
+- Filtros por linha (Tecnologia/Educacional) e consultor
 
-### Business Lines (Linhas de Negócio)
+### 5. Prospecção (NOVO!)
+- 817 empresas em prospecção
+- Gestão de follow-ups
+- Status: Novo, Em andamento, Fechado, Perdido
+- Sistema Kanban integrado
+- Histórico de contatos
 
-**Linha Tecnologia**: Complete management of technology programs with 120 database columns including empresa, CNPJ, numero_proposta, consultor, valor_proposta, situacao, status_etapa, solucao, ano, mes, and extensive tracking fields. Supports advanced filtering by empresa, consultor, situacao, ano, mes, and status_etapa with full pagination (25/50/100 records per page).
+### 6. Propostas e Contratos
+- Gestão completa de propostas
+- Acompanhamento de contratos
+- Status de pagamento
 
-**Linha Educacional**: Complete management of educational programs with 42 database columns including empresa, CNPJ, programa, consultor, valor, situacao, status_proposta, ano, mes, and tracking fields. Supports advanced filtering by empresa, consultor, situacao, ano, mes, and status_proposta with full pagination.
+### 7. Cronogramas
+- Planejamento de projetos
+- Alocação de consultores
+- Visualização mensal
 
-**Data Volume**: 2,940 technology records and 266 educational records successfully imported and managed.
+### 8. Linha Tecnologia e Educacional
+- 2.940 programas tecnológicos
+- 266 programas educacionais
+- Acompanhamento completo do ciclo
 
-### API Structure
+### 9. Relatórios
+- Exportação em PDF e Excel
+- Relatórios de propostas, contratos e cronogramas
+- Relatórios analíticos
 
-**RESTful Endpoints** are organized by domain, including `/api/login`, `/api/empresas`, `/api/consultores`, `/api/propostas`, `/api/cronogramas`, `/api/contratos`, `/api/contatos`, `/api/linha-tecnologia`, `/api/linha-educacional`, `/api/bi`, `/api/importacao`, `/api/chatbot`, `/api/relatorios`, and `/api/alertas`.
+### 10. Chatbot com IA
+- Integração com OpenAI
+- Consultas sobre dados do sistema
+- Análises e insights
 
-**Business Lines API Features**:
-- Full CRUD operations (GET, POST, PUT, DELETE)
-- Advanced filtering (empresa, consultor, situacao, ano, mes, status)
-- Pagination support (page, page_size parameters)
-- Statistics endpoints returning filtered counts
-- Excel export with applied filters
-- Dynamic filter options (years, consultants, statuses)
-- Protected deletion for seed data (dados_iniciais=True)
+## 🗄️ Banco de Dados
 
-**Design Patterns**: Dependency injection for database sessions and authentication, Pydantic schemas for type safety, and consistent error handling.
+### PostgreSQL Local (Replit)
+- Configurado automaticamente
+- Dados preservados entre reinicializações
+- 23 tabelas com relacionamentos
 
-### Alert System
+### Railway PostgreSQL
+- Veja o arquivo `RAILWAY_SETUP.md` para instruções completas
+- Migração automática de tabelas
+- Importação automática de dados na primeira inicialização
+- Dados permanentes
 
-**Automated Monitoring**: Includes alerts for contract expiration, overdue contracts, schedule deadline warnings, and stalled proposals. A centralized `/api/alertas/todos` endpoint aggregates all alert types.
+## 🔧 Tecnologias
 
-### Import/Export System
+- **Backend:** FastAPI 0.119.0
+- **Database:** PostgreSQL (SQLAlchemy ORM)
+- **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
+- **Python:** 3.11
+- **IA:** OpenAI GPT
+- **Relatórios:** ReportLab (PDF), OpenPyXL (Excel)
 
-**Data Import**: Pandas-based Excel/CSV processing supporting .xlsx, .xls, .csv formats with validation, duplicate detection, and batch processing. Seed data import is idempotent and marks initial data as protected.
-**Report Generation**: PDF reports using ReportLab and Excel exports using OpenPyXL with custom formatting and streaming responses.
+## 📁 Estrutura do Projeto
 
-### Chatbot Interface
+```
+workspace/
+├── app/
+│   ├── main.py                    # Aplicação principal FastAPI
+│   ├── database.py                # Configuração do banco de dados
+│   ├── models/
+│   │   └── models.py              # Modelos SQLAlchemy (23 tabelas)
+│   ├── routes/                    # Rotas da API (17 módulos)
+│   │   ├── auth.py               # Autenticação
+│   │   ├── empresas.py           # Gestão de empresas
+│   │   ├── consultores.py        # Gestão de consultores
+│   │   ├── propostas.py          # Propostas comerciais
+│   │   ├── contratos.py          # Contratos
+│   │   ├── cronogramas.py        # Cronogramas
+│   │   ├── pipeline.py           # Pipeline Kanban
+│   │   ├── prospeccao.py         # Prospecção
+│   │   └── ...                   # Outros módulos
+│   ├── static/                    # Arquivos estáticos
+│   │   ├── css/style.css
+│   │   └── js/                   # JavaScript por página
+│   ├── templates/                 # Templates HTML (17 páginas)
+│   ├── seed_data.py              # Importação de dados iniciais
+│   └── import_prospeccao_pipeline.py  # Importação pipeline/prospecção
+├── attached_assets/               # Planilhas Excel de dados
+├── pyproject.toml                 # Dependências Python
+├── RAILWAY_SETUP.md              # Guia de setup Railway
+└── replit.md                      # Este arquivo
+```
 
-**Natural Language Queries**: Supports pattern matching for common business questions, such as contract expiration, project status, and financial summaries. It has optional OpenAI integration for enhanced intelligence, operating with predefined patterns if no API key is provided.
+## 🚀 Como Funciona a Inicialização
 
-## External Dependencies
+### Primeira Vez
+1. Sistema cria todas as 23 tabelas automaticamente
+2. Importa dados de todas as planilhas Excel:
+   - Contatos
+   - Empresas
+   - Consultores
+   - Linha Tecnologia
+   - Linha Educacional
+   - Cronogramas
+   - **Pipeline Kanban** (925 empresas)
+   - **Prospecção** (817 empresas)
+3. Cria usuário admin padrão
+4. Sistema fica pronto para uso
 
-### Database
-- **PostgreSQL**: Primary relational database, connected via `DATABASE_URL` environment variable.
+### Reinicializações
+1. Sistema verifica estrutura do banco
+2. **NÃO reimporta dados** (preserva tudo)
+3. Adiciona apenas colunas/tabelas novas se necessário
+4. Mantém todos os dados existentes
 
-### Python Libraries
-- **FastAPI**: Web framework.
-- **SQLAlchemy**: ORM.
-- **Pydantic**: Data validation.
-- **python-jose**: JWT handling.
-- **bcrypt**: Password hashing.
-- **pandas**: Data import/export.
-- **openpyxl**: Excel handling.
-- **reportlab**: PDF generation.
-- **python-multipart**: File uploads.
-- **OpenAI**: Optional integration for the chatbot.
+## 🔄 Importação de Dados
 
-### Frontend Libraries
-- **Plotly.js 2.27.0**: Interactive charting.
-- **Font Awesome 6.4.0**: Icon library.
+### Automática no Startup
+O sistema importa automaticamente dados das planilhas em `attached_assets/`:
+- `contats_*.xlsx` → Tabela contatos
+- `empresas_*.xlsx` → Tabela empresas  
+- `crnograma principal jef_*.xlsx` → Tabela alocacoes_cronograma
+- `linha tecnologia_*.xlsx` → Tabelas linha_tecnologia, company_pipeline, prospeccao
+- `linha educacional_*.xlsx` → Tabelas linha_educacional, company_pipeline
 
-### Environment Configuration
-- **SESSION_SECRET**: JWT signing key.
-- **DATABASE_URL**: PostgreSQL connection string.
-- **ADMIN_EMAIL**: Default admin user email.
-- **ADMIN_PASSWORD**: Default admin password.
-- **OPENAI_API_KEY**: Optional API key for advanced chatbot features.
+### Segurança dos Dados
+- ✅ Importação acontece apenas uma vez
+- ✅ Dados marcados com `dados_iniciais=True` não são sobrescritos
+- ✅ Sistema detecta dados existentes e pula reimportação
+- ✅ Rollback automático em caso de erro
+
+## 📊 Tabelas do Banco de Dados
+
+1. **usuarios** - Usuários do sistema (Admin, Consultor, Financeiro)
+2. **empresas** - Cadastro de empresas
+3. **consultores** - Cadastro de consultores
+4. **propostas** - Propostas comerciais
+5. **cronogramas** - Cronogramas de execução
+6. **tarefas** - Tarefas dos cronogramas
+7. **contratos** - Contratos assinados
+8. **feriados** - Calendário de feriados
+9. **alocacoes_cronograma** - Alocação de consultores por dia
+10. **contatos** - Contatos de empresas
+11. **linha_tecnologia** - Programas de tecnologia
+12. **linha_educacional** - Programas educacionais
+13. **prospeccao** - Empresas em prospecção
+14. **followups** - Follow-ups de prospecção
+15. **carteira_grm** - Carteira GRM
+16. **pesquisas_satisfacao** - Pesquisas de satisfação
+17. **solucoes** - Catálogo de soluções
+18. **stages** - Estágios do pipeline Kanban
+19. **company_pipeline** - Empresas no pipeline
+20. **company_stage_history** - Histórico de movimentação no pipeline
+21. **notes** - Notas sobre empresas
+22. **attachments** - Anexos de documentos
+23. **activities** - Log de atividades do sistema
+
+## 🛠️ Manutenção
+
+### Adicionar Novos Dados
+1. Coloque a planilha Excel em `attached_assets/`
+2. Modifique `seed_data.py` ou `import_prospeccao_pipeline.py`
+3. Reinicie o servidor
+
+### Backup de Dados
+```bash
+# Exportar banco PostgreSQL
+pg_dump $DATABASE_URL > backup.sql
+
+# Restaurar
+psql $DATABASE_URL < backup.sql
+```
+
+### Logs do Sistema
+- Verificação de tabelas no startup
+- Importação de dados
+- Erros e avisos
+
+## 🌐 Deploy para Produção
+
+Veja `RAILWAY_SETUP.md` para instruções completas de deploy no Railway.
+
+### Configuração Recomendada
+- PostgreSQL no Railway
+- Variável `DATABASE_URL` configurada
+- Todas as planilhas em `attached_assets/`
+- Sistema importa dados automaticamente na primeira vez
+
+## 📞 Contato
+
+Sistema desenvolvido para gestão de relacionamento industrial v1.03
+
+---
+
+**Última atualização:** 21/10/2025
+**Status:** ✅ Totalmente funcional com pipeline kanban e prospecção

@@ -97,6 +97,9 @@ def importar_para_pipeline(db: Session):
     # Carregar stages
     stages = {stage.nome: stage for stage in db.query(Stage).all()}
     
+    # Importar CompanyStageHistory se necessário
+    from app.models.models import CompanyStageHistory
+    
     # Importar Linha Tecnologia
     print("📁 Lendo arquivo: linha tecnologia_1761065276454.xlsx")
     df_tech = pd.read_excel('attached_assets/linha tecnologia_1761065276454.xlsx')
@@ -147,6 +150,17 @@ def importar_para_pipeline(db: Session):
         )
         
         db.add(pipeline_entry)
+        db.flush()  # Para obter o ID
+        
+        # Criar histórico inicial
+        history = CompanyStageHistory(
+            company_pipeline_id=pipeline_entry.id,
+            stage_id=stage.id,
+            data_entrada=datetime.utcnow(),
+            observacao="Importação inicial de dados"
+        )
+        db.add(history)
+        
         tech_count += 1
         
         if tech_count % 100 == 0:
@@ -206,6 +220,17 @@ def importar_para_pipeline(db: Session):
         )
         
         db.add(pipeline_entry)
+        db.flush()  # Para obter o ID
+        
+        # Criar histórico inicial
+        history = CompanyStageHistory(
+            company_pipeline_id=pipeline_entry.id,
+            stage_id=stage.id,
+            data_entrada=datetime.utcnow(),
+            observacao="Importação inicial de dados"
+        )
+        db.add(history)
+        
         edu_count += 1
         
         if edu_count % 50 == 0:
