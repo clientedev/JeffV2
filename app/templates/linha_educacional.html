@@ -508,7 +508,7 @@ async function deletarRegistro(id) {
 }
 
 function exportarExcel() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const search = document.getElementById('searchInput').value;
     const situacao = document.getElementById('situacaoFilter').value;
     const ano = document.getElementById('anoFilter').value;
