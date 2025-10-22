@@ -43,7 +43,7 @@ async def obter_todos_alertas(
         if proposta:
             empresa = db.query(Empresa).filter(Empresa.id == proposta.empresa_id).first()
             if empresa:
-                empresa_nome = empresa.nome_fantasia
+                empresa_nome = empresa.nome
         
         contratos_vencendo.append({
             "numero_contrato": c.numero_contrato if c.numero_contrato else "N/A",
@@ -63,7 +63,7 @@ async def obter_todos_alertas(
                 proposta_numero = proposta.numero_proposta
             empresa = db.query(Empresa).filter(Empresa.id == proposta.empresa_id).first()
             if empresa:
-                empresa_nome = empresa.nome_fantasia
+                empresa_nome = empresa.nome
         
         cronogramas_proximos.append({
             "proposta_numero": proposta_numero,
@@ -79,7 +79,7 @@ async def obter_todos_alertas(
         
         empresa = db.query(Empresa).filter(Empresa.id == p.empresa_id).first()
         if empresa:
-            empresa_nome = empresa.nome_fantasia
+            empresa_nome = empresa.nome
             
         consultor = db.query(Consultor).filter(Consultor.id == p.consultor_id).first()
         if consultor:
