@@ -255,9 +255,8 @@ async def criar_campanha(
     titulo: str,
     assunto: str,
     corpo_email: str,
-    remetente_nome: str = None,
-    remetente_email: str = None,
     destinatarios_ids: List[int] = [],
+    emails_manuais: List[str] = [],
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
@@ -265,8 +264,6 @@ async def criar_campanha(
         titulo=titulo,
         assunto=assunto,
         corpo_email=corpo_email,
-        remetente_nome=remetente_nome,
-        remetente_email=remetente_email,
         usuario_id=current_user.id,
         status='Rascunho'
     )
@@ -274,6 +271,8 @@ async def criar_campanha(
     db.add(nova_campanha)
     db.commit()
     db.refresh(nova_campanha)
+    
+    total_destinatarios = 0
     
     if destinatarios_ids:
         for contato_id in destinatarios_ids:
@@ -286,9 +285,21 @@ async def criar_campanha(
                     nome=contato.nome
                 )
                 db.add(destinatario)
-        
-        nova_campanha.total_destinatarios = len(destinatarios_ids)
-        db.commit()
+                total_destinatarios += 1
+    
+    if emails_manuais:
+        for email in emails_manuais:
+            if email and '@' in email:
+                destinatario = CampanhaDestinatario(
+                    campanha_id=nova_campanha.id,
+                    email=email,
+                    nome=email.split('@')[0]
+                )
+                db.add(destinatario)
+                total_destinatarios += 1
+    
+    nova_campanha.total_destinatarios = total_destinatarios
+    db.commit()
     
     return {
         "id": nova_campanha.id,

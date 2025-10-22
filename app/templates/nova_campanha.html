@@ -328,18 +328,9 @@
                 <label class="form-label">Assunto do Email *</label>
                 <input type="text" class="form-input" name="assunto" id="assunto" 
                        placeholder="Ex: Novidades e Oportunidades em Tecnologia" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Remetente (Nome)</label>
-                <input type="text" class="form-input" name="remetente_nome" id="remetente_nome" 
-                       placeholder="Ex: SENAI - Equipe de Relacionamento">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Remetente (Email)</label>
-                <input type="email" class="form-input" name="remetente_email" id="remetente_email" 
-                       placeholder="Ex: contato@senai.com.br">
+                <small style="color: #64748b; font-size: 13px; margin-top: 4px; display: block;">
+                    ℹ️ O remetente será configurado automaticamente nas <a href="/automacoes" style="color: #6366f1;">Configurações SMTP</a>
+                </small>
             </div>
 
             <div class="form-group">
@@ -359,14 +350,42 @@
                 <span class="selecionados-count" id="countSelecionados">0 selecionados</span>
             </div>
 
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchContatos" 
-                       placeholder="Buscar por nome, email ou empresa...">
+            <div style="margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="tipoDestinatario" value="lista" checked onchange="alternarTipoDestinatario()">
+                    <span style="font-weight: 500; color: #1e293b;">Selecionar da lista de contatos</span>
+                </label>
             </div>
 
-            <div class="destinatarios-selector" id="destinatariosList">
-                <div class="empty-state">
-                    Carregando contatos...
+            <div id="listaContatosSection">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchContatos" 
+                           placeholder="Buscar por nome, email ou empresa...">
+                </div>
+
+                <div class="destinatarios-selector" id="destinatariosList">
+                    <div class="empty-state">
+                        Carregando contatos...
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="tipoDestinatario" value="manual" onchange="alternarTipoDestinatario()">
+                    <span style="font-weight: 500; color: #1e293b;">Digitar emails manualmente</span>
+                </label>
+            </div>
+
+            <div id="emailsManuaisSection" class="hidden">
+                <div class="form-group">
+                    <label class="form-label">Digite os emails (um por linha ou separados por vírgula)</label>
+                    <textarea class="form-input" id="emailsManuais" 
+                              placeholder="exemplo1@empresa.com&#10;exemplo2@empresa.com&#10;exemplo3@empresa.com"
+                              style="min-height: 150px;"></textarea>
+                    <small style="color: #64748b; font-size: 13px; margin-top: 4px; display: block;">
+                        💡 Digite um email por linha ou separe por vírgula (,)
+                    </small>
                 </div>
             </div>
         </div>
@@ -540,22 +559,57 @@ document.getElementById('btnSalvarRascunho').addEventListener('click', async () 
     await salvarCampanha(false);
 });
 
+function alternarTipoDestinatario() {
+    const tipo = document.querySelector('input[name="tipoDestinatario"]:checked').value;
+    const listaSection = document.getElementById('listaContatosSection');
+    const manuaisSection = document.getElementById('emailsManuaisSection');
+    
+    if (tipo === 'lista') {
+        listaSection.classList.remove('hidden');
+        manuaisSection.classList.add('hidden');
+    } else {
+        listaSection.classList.add('hidden');
+        manuaisSection.classList.remove('hidden');
+    }
+}
+
 async function salvarCampanha(enviar = false) {
     const form = document.getElementById('formCampanha');
     const formData = new FormData(form);
     
-    if (contatosSelecionados.size === 0) {
-        alert('Selecione pelo menos um destinatário');
-        return;
+    const tipoDestinatario = document.querySelector('input[name="tipoDestinatario"]:checked').value;
+    let destinatarios_ids = [];
+    let emails_manuais = [];
+    
+    if (tipoDestinatario === 'lista') {
+        if (contatosSelecionados.size === 0) {
+            alert('Selecione pelo menos um destinatário da lista');
+            return;
+        }
+        destinatarios_ids = Array.from(contatosSelecionados);
+    } else {
+        const emailsTexto = document.getElementById('emailsManuais').value.trim();
+        if (!emailsTexto) {
+            alert('Digite pelo menos um email');
+            return;
+        }
+        emails_manuais = emailsTexto
+            .split(/[\n,]+/)
+            .map(email => email.trim())
+            .filter(email => email && email.includes('@'));
+        
+        if (emails_manuais.length === 0) {
+            alert('Nenhum email válido encontrado');
+            return;
+        }
     }
     
     const data = {
         titulo: formData.get('titulo'),
         assunto: formData.get('assunto'),
         corpo_email: formData.get('corpo_email'),
-        remetente_nome: formData.get('remetente_nome'),
-        remetente_email: formData.get('remetente_email'),
-        destinatarios_ids: Array.from(contatosSelecionados)
+        destinatarios_ids: destinatarios_ids,
+        emails_manuais: emails_manuais
     };
     
     try {
