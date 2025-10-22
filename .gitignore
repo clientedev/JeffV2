@@ -1,2 +1,18 @@
 node_modules/
 .env
+
+# SMTP Configuration (sensitive - contains encrypted passwords)
+smtp_config.json
+.smtp_key
+
+# Python
+__pycache__/
+*.pyc
+.pythonlibs/
+
+# Database
+*.db
+
+# Uploads
+uploads/
+anexos_email/

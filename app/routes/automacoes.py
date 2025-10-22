@@ -6,6 +6,13 @@ from typing import List, Optional
 from datetime import datetime
 import os
 import shutil
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import json
+import base64
+from cryptography.fernet import Fernet
+import os
 
 from app.database import get_db
 from app.models.models import (
@@ -531,3 +538,162 @@ async def deletar_campanha(
     db.commit()
     
     return {"message": "Campanha deletada com sucesso"}
+
+def _get_encryption_key():
+    key_file = ".smtp_key"
+    if not os.path.exists(key_file):
+        key = Fernet.generate_key()
+        with open(key_file, 'wb') as f:
+            f.write(key)
+        os.chmod(key_file, 0o600)
+    else:
+        with open(key_file, 'rb') as f:
+            key = f.read()
+    return key
+
+def _encrypt_password(password: str) -> str:
+    key = _get_encryption_key()
+    f = Fernet(key)
+    encrypted = f.encrypt(password.encode())
+    return base64.b64encode(encrypted).decode()
+
+def _decrypt_password(encrypted_password: str) -> str:
+    key = _get_encryption_key()
+    f = Fernet(key)
+    decrypted = f.decrypt(base64.b64decode(encrypted_password))
+    return decrypted.decode()
+
+@router.post("/smtp-config")
+async def salvar_configuracao_smtp(
+    smtp_host: str,
+    smtp_port: int,
+    smtp_security: str,
+    smtp_user: str,
+    smtp_password: str,
+    smtp_from_name: str = None,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    config_file = "smtp_config.json"
+    
+    encrypted_password = _encrypt_password(smtp_password)
+    
+    config_data = {
+        "smtp_host": smtp_host,
+        "smtp_port": smtp_port,
+        "smtp_security": smtp_security,
+        "smtp_user": smtp_user,
+        "smtp_password_encrypted": encrypted_password,
+        "smtp_from_name": smtp_from_name or smtp_user,
+        "updated_at": datetime.utcnow().isoformat(),
+        "updated_by": current_user.id
+    }
+    
+    try:
+        with open(config_file, 'w') as f:
+            json.dump(config_data, f, indent=2)
+        os.chmod(config_file, 0o600)
+        
+        return {
+            "success": True,
+            "message": "Configurações SMTP salvas com sucesso (senha criptografada)"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao salvar configurações: {str(e)}"
+        )
+
+@router.post("/test-smtp")
+async def testar_conexao_smtp(
+    smtp_host: str,
+    smtp_port: int,
+    smtp_security: str,
+    smtp_user: str,
+    smtp_password: str,
+    current_user: Usuario = Depends(get_current_user)
+):
+    try:
+        if smtp_security == "SSL":
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server.ehlo()
+            if smtp_security == "TLS":
+                server.starttls()
+                server.ehlo()
+        
+        server.login(smtp_user, smtp_password)
+        
+        server.quit()
+        
+        return {
+            "success": True,
+            "message": f"Conexão estabelecida com sucesso com {smtp_host}:{smtp_port}"
+        }
+        
+    except smtplib.SMTPAuthenticationError:
+        raise HTTPException(
+            status_code=400,
+            detail="Falha na autenticação. Verifique o email e senha (use App Password para Gmail)."
+        )
+    except smtplib.SMTPConnectError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não foi possível conectar ao servidor {smtp_host}:{smtp_port}. Verifique o endereço e porta."
+        )
+    except TimeoutError:
+        raise HTTPException(
+            status_code=400,
+            detail="Timeout ao conectar. Verifique sua conexão com a internet e firewall."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao testar conexão: {str(e)}"
+        )
+
+@router.get("/smtp-config")
+async def obter_configuracao_smtp(
+    current_user: Usuario = Depends(get_current_user)
+):
+    config_file = "smtp_config.json"
+    
+    if not os.path.exists(config_file):
+        return {
+            "configured": False,
+            "message": "Nenhuma configuração SMTP encontrada"
+        }
+    
+    try:
+        with open(config_file, 'r') as f:
+            config_data = json.load(f)
+        
+        return {
+            "configured": True,
+            "smtp_host": config_data.get("smtp_host"),
+            "smtp_port": config_data.get("smtp_port"),
+            "smtp_security": config_data.get("smtp_security"),
+            "smtp_user": config_data.get("smtp_user"),
+            "smtp_from_name": config_data.get("smtp_from_name"),
+            "has_password": bool(config_data.get("smtp_password_encrypted")),
+            "updated_at": config_data.get("updated_at")
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao carregar configurações: {str(e)}"
+        )
+
+def _load_smtp_config():
+    config_file = "smtp_config.json"
+    if not os.path.exists(config_file):
+        return None
+    
+    with open(config_file, 'r') as f:
+        config_data = json.load(f)
+    
+    if config_data.get("smtp_password_encrypted"):
+        config_data["smtp_password"] = _decrypt_password(config_data["smtp_password_encrypted"])
+    
+    return config_data

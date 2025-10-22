@@ -18,125 +18,89 @@ async def obter_todos_alertas(
     sete_dias = hoje + timedelta(days=7)
     trinta_dias_atras = hoje - timedelta(days=30)
     
-    contratos_vencidos = db.query(Contrato).filter(
-        Contrato.data_vencimento < hoje,
-        Contrato.status_pagamento.in_(["Pendente", "Vencido"])
-    ).all()
-    
-    contratos_vencendo = db.query(Contrato).filter(
+    contratos_vencendo_list = db.query(Contrato).filter(
         Contrato.data_vencimento <= sete_dias,
-        Contrato.data_vencimento >= hoje,
-        Contrato.status_pagamento == "Pendente"
+        Contrato.data_vencimento >= hoje
     ).all()
     
-    cronogramas_atrasados = db.query(Cronograma).filter(
-        Cronograma.data_termino < hoje,
-        Cronograma.status != "Concluído"
-    ).all()
-    
-    cronogramas_vencendo = db.query(Cronograma).filter(
+    cronogramas_proximos_list = db.query(Cronograma).filter(
         Cronograma.data_termino <= sete_dias,
         Cronograma.data_termino >= hoje,
         Cronograma.status != "Concluído"
     ).all()
     
-    propostas_paradas = db.query(Proposta).filter(
+    propostas_paradas_list = db.query(Proposta).filter(
         Proposta.status == "Em andamento",
-        Proposta.atualizado_em < trinta_dias_atras
+        Proposta.data_proposta < trinta_dias_atras
     ).all()
     
-    tarefas_criticas = db.query(Cronograma).filter(
-        Cronograma.percentual_conclusao < 30,
-        Cronograma.data_termino <= sete_dias,
-        Cronograma.status != "Concluído"
-    ).all()
+    from app.models.models import Empresa, Consultor
     
-    alertas = {
-        "resumo": {
-            "total_alertas": (
-                len(contratos_vencidos) + len(contratos_vencendo) + 
-                len(cronogramas_atrasados) + len(cronogramas_vencendo) + 
-                len(propostas_paradas) + len(tarefas_criticas)
-            ),
-            "contratos_criticos": len(contratos_vencidos) + len(contratos_vencendo),
-            "cronogramas_criticos": len(cronogramas_atrasados) + len(cronogramas_vencendo),
-            "propostas_paradas": len(propostas_paradas),
-            "tarefas_criticas": len(tarefas_criticas)
-        },
-        "contratos": {
-            "vencidos": [
-                {
-                    "id": c.id,
-                    "numero": c.numero_contrato,
-                    "data_vencimento": str(c.data_vencimento),
-                    "valor": float(c.valor) if c.valor else 0,
-                    "status": c.status_pagamento,
-                    "tipo_alerta": "CRÍTICO",
-                    "mensagem": f"Contrato {c.numero_contrato} vencido há {(hoje - c.data_vencimento).days} dias"
-                } for c in contratos_vencidos
-            ],
-            "vencendo": [
-                {
-                    "id": c.id,
-                    "numero": c.numero_contrato,
-                    "data_vencimento": str(c.data_vencimento),
-                    "valor": float(c.valor) if c.valor else 0,
-                    "status": c.status_pagamento,
-                    "tipo_alerta": "ATENÇÃO",
-                    "mensagem": f"Contrato {c.numero_contrato} vence em {(c.data_vencimento - hoje).days} dias"
-                } for c in contratos_vencendo
-            ]
-        },
-        "cronogramas": {
-            "atrasados": [
-                {
-                    "id": cr.id,
-                    "proposta_id": cr.proposta_id,
-                    "data_termino": str(cr.data_termino),
-                    "percentual_conclusao": float(cr.percentual_conclusao),
-                    "status": cr.status,
-                    "tipo_alerta": "CRÍTICO",
-                    "mensagem": f"Projeto atrasado há {(hoje - cr.data_termino).days} dias - {cr.percentual_conclusao}% concluído"
-                } for cr in cronogramas_atrasados
-            ],
-            "vencendo": [
-                {
-                    "id": cr.id,
-                    "proposta_id": cr.proposta_id,
-                    "data_termino": str(cr.data_termino),
-                    "percentual_conclusao": float(cr.percentual_conclusao),
-                    "status": cr.status,
-                    "tipo_alerta": "ATENÇÃO",
-                    "mensagem": f"Projeto vence em {(cr.data_termino - hoje).days} dias - {cr.percentual_conclusao}% concluído"
-                } for cr in cronogramas_vencendo
-            ]
-        },
-        "propostas": {
-            "paradas": [
-                {
-                    "id": p.id,
-                    "numero": p.numero_proposta,
-                    "ultima_atualizacao": str(p.atualizado_em),
-                    "dias_parado": (datetime.now() - p.atualizado_em).days,
-                    "status": p.status,
-                    "tipo_alerta": "AVISO",
-                    "mensagem": f"Proposta {p.numero_proposta} sem atualização há {(datetime.now() - p.atualizado_em).days} dias"
-                } for p in propostas_paradas
-            ]
-        },
-        "tarefas_criticas": [
-            {
-                "id": cr.id,
-                "proposta_id": cr.proposta_id,
-                "data_termino": str(cr.data_termino),
-                "percentual_conclusao": float(cr.percentual_conclusao),
-                "tipo_alerta": "URGENTE",
-                "mensagem": f"Projeto crítico com apenas {cr.percentual_conclusao}% concluído e vencimento próximo"
-            } for cr in tarefas_criticas
-        ]
+    contratos_vencendo = []
+    for c in contratos_vencendo_list:
+        empresa_nome = "N/A"
+        proposta = db.query(Proposta).filter(Proposta.id == c.proposta_id).first()
+        if proposta:
+            empresa = db.query(Empresa).filter(Empresa.id == proposta.empresa_id).first()
+            if empresa:
+                empresa_nome = empresa.nome_fantasia
+        
+        contratos_vencendo.append({
+            "numero_contrato": c.numero_contrato if c.numero_contrato else "N/A",
+            "empresa_nome": empresa_nome,
+            "valor": float(c.valor) if c.valor is not None else 0,
+            "data_vencimento": str(c.data_vencimento)
+        })
+    
+    cronogramas_proximos = []
+    for cr in cronogramas_proximos_list:
+        empresa_nome = "N/A"
+        proposta_numero = "N/A"
+        
+        proposta = db.query(Proposta).filter(Proposta.id == cr.proposta_id).first()
+        if proposta:
+            if proposta.numero_proposta:
+                proposta_numero = proposta.numero_proposta
+            empresa = db.query(Empresa).filter(Empresa.id == proposta.empresa_id).first()
+            if empresa:
+                empresa_nome = empresa.nome_fantasia
+        
+        cronogramas_proximos.append({
+            "proposta_numero": proposta_numero,
+            "empresa_nome": empresa_nome,
+            "data_termino": str(cr.data_termino),
+            "percentual_conclusao": float(cr.percentual_conclusao) if cr.percentual_conclusao is not None else 0
+        })
+    
+    propostas_paradas = []
+    for p in propostas_paradas_list:
+        empresa_nome = "N/A"
+        consultor_nome = "N/A"
+        
+        empresa = db.query(Empresa).filter(Empresa.id == p.empresa_id).first()
+        if empresa:
+            empresa_nome = empresa.nome_fantasia
+            
+        consultor = db.query(Consultor).filter(Consultor.id == p.consultor_id).first()
+        if consultor:
+            consultor_nome = consultor.nome
+        
+        data_proposta_str = str(p.criado_em.date())
+        if p.data_proposta is not None:
+            data_proposta_str = str(p.data_proposta)
+        
+        propostas_paradas.append({
+            "numero_proposta": p.numero_proposta if p.numero_proposta else "N/A",
+            "empresa_nome": empresa_nome,
+            "consultor_nome": consultor_nome,
+            "data_proposta": data_proposta_str
+        })
+    
+    return {
+        "contratos_vencendo": contratos_vencendo,
+        "cronogramas_proximos": cronogramas_proximos,
+        "propostas_paradas": propostas_paradas
     }
-    
-    return alertas
 
 @router.get("/resumo")
 async def obter_resumo_alertas(

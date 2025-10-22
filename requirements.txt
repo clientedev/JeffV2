@@ -16,3 +16,4 @@ reportlab
 sqlalchemy
 uvicorn
 xlrd
+cryptography

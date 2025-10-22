@@ -333,6 +333,9 @@
         <button class="tab" onclick="switchTab('contatos')">
             <i class="fas fa-address-book"></i> Contatos
         </button>
+        <button class="tab" onclick="switchTab('configuracoes')">
+            <i class="fas fa-cog"></i> Configurações SMTP
+        </button>
     </div>
 
     <div id="campanhas-tab" class="tab-content active">
@@ -372,12 +375,100 @@
                 </thead>
                 <tbody id="contatosTableBody">
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #cbd5e1;">
                             Nenhum contato cadastrado
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="configuracoes-tab" class="tab-content">
+        <div class="card">
+            <h3 style="margin: 0 0 20px 0; color: #f1f5f9;">
+                <i class="fas fa-server"></i> Configurações do Servidor SMTP
+            </h3>
+            <p style="color: #cbd5e1; margin-bottom: 24px;">
+                Configure o servidor de email SMTP para enviar campanhas automaticamente. 
+                Estas configurações são necessárias para que o sistema possa enviar emails em seu nome.
+            </p>
+
+            <form id="formConfigSMTP" onsubmit="salvarConfigSMTP(event)">
+                <div class="form-group">
+                    <label class="form-label">Servidor SMTP *</label>
+                    <input type="text" class="form-input" name="smtp_host" 
+                           placeholder="smtp.gmail.com" required>
+                    <small style="color: #cbd5e1;">Ex: smtp.gmail.com, smtp.office365.com, smtp.sendgrid.net</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Porta *</label>
+                        <input type="number" class="form-input" name="smtp_port" 
+                               placeholder="587" required>
+                        <small style="color: #cbd5e1;">Comum: 587 (TLS), 465 (SSL), 25</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Segurança *</label>
+                        <select class="form-input" name="smtp_security" required>
+                            <option value="TLS">TLS/STARTTLS (587)</option>
+                            <option value="SSL">SSL (465)</option>
+                            <option value="NONE">Sem criptografia (25)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email de Envio *</label>
+                    <input type="email" class="form-input" name="smtp_user" 
+                           placeholder="seu-email@empresa.com" required>
+                    <small style="color: #cbd5e1;">O email que será usado para enviar as campanhas</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Senha do Email ou App Password *</label>
+                    <input type="password" class="form-input" name="smtp_password" 
+                           placeholder="••••••••" required>
+                    <small style="color: #cbd5e1;">
+                        Gmail: Use App Password (não a senha normal). 
+                        <a href="https://support.google.com/accounts/answer/185833" target="_blank" 
+                           style="color: #6366f1;">Como criar App Password</a>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nome do Remetente</label>
+                    <input type="text" class="form-input" name="smtp_from_name" 
+                           placeholder="Núcleo de Tecnologia">
+                    <small style="color: #cbd5e1;">Nome que aparecerá como remetente dos emails</small>
+                </div>
+
+                <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <h4 style="color: #f1f5f9; margin: 0 0 12px 0; font-size: 16px;">
+                        <i class="fas fa-info-circle" style="color: #6366f1;"></i> Configurações Comuns
+                    </h4>
+                    <div style="color: #cbd5e1; font-size: 14px; line-height: 1.8;">
+                        <strong style="color: #f1f5f9;">Gmail:</strong> smtp.gmail.com, Porta 587 (TLS)<br>
+                        <strong style="color: #f1f5f9;">Outlook/Office365:</strong> smtp.office365.com, Porta 587 (TLS)<br>
+                        <strong style="color: #f1f5f9;">Yahoo:</strong> smtp.mail.yahoo.com, Porta 587 (TLS)<br>
+                        <strong style="color: #f1f5f9;">SendGrid:</strong> smtp.sendgrid.net, Porta 587 (TLS)<br>
+                        <strong style="color: #f1f5f9;">Mailgun:</strong> smtp.mailgun.org, Porta 587 (TLS)
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="testarConfigSMTP()">
+                        <i class="fas fa-vial"></i>
+                        Testar Conexão
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Salvar Configurações
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -602,6 +693,84 @@ async function deletarContato(id) {
         }
     } catch (error) {
         console.error('Erro ao deletar contato:', error);
+    }
+}
+
+async function salvarConfigSMTP(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const data = {
+        smtp_host: formData.get('smtp_host'),
+        smtp_port: parseInt(formData.get('smtp_port')),
+        smtp_security: formData.get('smtp_security'),
+        smtp_user: formData.get('smtp_user'),
+        smtp_password: formData.get('smtp_password'),
+        smtp_from_name: formData.get('smtp_from_name') || formData.get('smtp_user')
+    };
+    
+    try {
+        const response = await fetch('/api/automacoes/smtp-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            alert('✅ Configurações SMTP salvas com sucesso!');
+        } else {
+            const error = await response.json();
+            alert('❌ Erro ao salvar: ' + (error.detail || 'Erro desconhecido'));
+        }
+    } catch (error) {
+        console.error('Erro ao salvar configurações SMTP:', error);
+        alert('❌ Erro ao salvar configurações SMTP');
+    }
+}
+
+async function testarConfigSMTP() {
+    const form = document.getElementById('formConfigSMTP');
+    const formData = new FormData(form);
+    
+    const data = {
+        smtp_host: formData.get('smtp_host'),
+        smtp_port: parseInt(formData.get('smtp_port')),
+        smtp_security: formData.get('smtp_security'),
+        smtp_user: formData.get('smtp_user'),
+        smtp_password: formData.get('smtp_password')
+    };
+    
+    if (!data.smtp_host || !data.smtp_port || !data.smtp_user || !data.smtp_password) {
+        alert('⚠️ Preencha todos os campos obrigatórios antes de testar');
+        return;
+    }
+    
+    try {
+        alert('🔄 Testando conexão SMTP... Aguarde.');
+        
+        const response = await fetch('/api/automacoes/test-smtp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            alert('✅ Conexão SMTP testada com sucesso!\n\n' + (result.message || 'Servidor respondeu corretamente.'));
+        } else {
+            alert('❌ Falha no teste de conexão:\n\n' + (result.detail || result.message || 'Erro desconhecido'));
+        }
+    } catch (error) {
+        console.error('Erro ao testar SMTP:', error);
+        alert('❌ Erro ao testar conexão SMTP:\n\n' + error.message);
     }
 }
 
