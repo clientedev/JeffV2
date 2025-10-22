@@ -418,7 +418,7 @@ async function carregarContatos() {
     try {
         const response = await fetch('/api/automacoes/email-contatos?limit=1000', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         });
         
@@ -568,7 +568,7 @@ async function salvarCampanha(enviar = false) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             },
             body: JSON.stringify(data)
         });
@@ -588,7 +588,7 @@ async function salvarCampanha(enviar = false) {
                 await fetch(`/api/automacoes/campanhas/${campanhaId}/anexos`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                     },
                     body: formDataAnexo
                 });
@@ -599,7 +599,7 @@ async function salvarCampanha(enviar = false) {
             await fetch(`/api/automacoes/campanhas/${campanhaId}/enviar`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 }
             });
             alert('Campanha criada e marcada para envio!');

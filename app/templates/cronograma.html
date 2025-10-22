@@ -543,7 +543,7 @@ function getCorProjeto(codigo) {
 
 async function carregarConsultores() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch('/api/consultores/', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -566,7 +566,7 @@ async function carregarConsultores() {
 
 async function carregarAlocacoes() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const ano = mesAtual.getFullYear();
         const mes = String(mesAtual.getMonth() + 1).padStart(2, '0');
         const dataInicio = `${ano}-${mes}-01`;
@@ -707,7 +707,7 @@ function fecharModal() {
 async function salvarNovaAlocacao(event) {
     event.preventDefault();
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const data = {
         consultor_id: parseInt(document.getElementById('consultorNovo').value),
         data: document.getElementById('dataNova').value,
@@ -805,7 +805,7 @@ function adicionarAlocacaoNoDia(data) {
 async function deletarAlocacao(id) {
     if (!confirm('Tem certeza que deseja deletar esta alocação?')) return;
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     
     try {
         const response = await fetch(`/api/cronogramas/alocacoes/${id}`, {
@@ -827,7 +827,7 @@ async function deletarAlocacao(id) {
 }
 
 async function exportarPDF() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const dataInicio = getDataInicioMes();
     const dataFim = getDataFimMes();
     const consultorId = document.getElementById('consultorFiltro').value;
@@ -860,7 +860,7 @@ async function exportarPDF() {
 }
 
 async function exportarExcel() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const dataInicio = getDataInicioMes();
     const dataFim = getDataFimMes();
     const consultorId = document.getElementById('consultorFiltro').value;
@@ -906,6 +906,11 @@ function getDataFimMes() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/';
+        return;
+    }
+    
     const hoje = new Date();
     mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     

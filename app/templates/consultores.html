@@ -103,7 +103,7 @@ async function carregarConsultores() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const url = busca ? `${API_URL}?busca=${encodeURIComponent(busca)}` : API_URL;
         
         const response = await fetch(url, {
@@ -152,7 +152,7 @@ function abrirModalNovoConsultor() {
 
 async function editarConsultor(id) {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`${API_URL}/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -185,7 +185,7 @@ async function salvarConsultor() {
     };
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const url = id ? `${API_URL}/${id}` : API_URL;
         const method = id ? 'PUT' : 'POST';
         
@@ -215,7 +215,7 @@ async function excluirConsultor(id) {
     if (!confirm('Deseja realmente excluir este consultor?')) return;
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -236,6 +236,12 @@ function fecharModal() {
     document.getElementById('modalConsultor').classList.remove('active');
 }
 
-document.addEventListener('DOMContentLoaded', carregarConsultores);
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/';
+    } else {
+        carregarConsultores();
+    }
+});
 </script>
 {% endblock %}

@@ -250,7 +250,7 @@ async function enviarMensagem(mensagem) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch('/api/chatbot/perguntar/', {
             method: 'POST',
             headers: {

@@ -184,7 +184,7 @@ let filtros = {};
 
 async function carregarFiltros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch('/api/contatos/filtros', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -220,7 +220,7 @@ async function carregarFiltros() {
 
 async function carregarContatos() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const search = document.getElementById('searchInput').value;
         const porte = document.getElementById('porteFilter').value;
         const er = document.getElementById('erFilter').value;
@@ -281,7 +281,7 @@ function novoContato() {
 
 async function editarContato(id) {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/contatos/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -315,7 +315,7 @@ async function editarContato(id) {
 
 async function salvarContato() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const id = document.getElementById('contatoId').value;
         
         const data = {
@@ -366,7 +366,7 @@ async function deletarContato(id) {
     if (!confirm('Deseja realmente deletar este contato?')) return;
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`/api/contatos/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -385,7 +385,7 @@ async function deletarContato(id) {
 }
 
 function exportarExcel() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const search = document.getElementById('searchInput').value;
     const porte = document.getElementById('porteFilter').value;
     const er = document.getElementById('erFilter').value;
@@ -401,7 +401,7 @@ function exportarExcel() {
 }
 
 function exportarPDF() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const search = document.getElementById('searchInput').value;
     const porte = document.getElementById('porteFilter').value;
     const er = document.getElementById('erFilter').value;
@@ -433,7 +433,11 @@ function debounce(func, wait) {
     };
 }
 
-carregarFiltros();
-carregarContatos();
+if (!localStorage.getItem('access_token')) {
+    window.location.href = '/';
+} else {
+    carregarFiltros();
+    carregarContatos();
+}
 </script>
 {% endblock %}

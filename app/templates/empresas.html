@@ -118,7 +118,7 @@ let filtrosCache = {};
 
 async function carregarValoresFiltros() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await fetch(`${API_URL}/filtros/valores`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -166,7 +166,7 @@ async function carregarEmpresas() {
     tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; padding: 40px;"><span class="loading-spinner"></span> Carregando...</td></tr>';
     
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const params = new URLSearchParams();
         
         const busca = document.getElementById('buscaEmpresa').value;
@@ -246,7 +246,7 @@ function limparFiltros() {
 }
 
 async function exportarExcel() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const params = new URLSearchParams();
     
     const busca = document.getElementById('buscaEmpresa').value;
@@ -297,7 +297,7 @@ async function exportarExcel() {
 }
 
 async function exportarPDF() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const params = new URLSearchParams();
     
     const busca = document.getElementById('buscaEmpresa').value;
@@ -348,8 +348,12 @@ async function exportarPDF() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await carregarValoresFiltros();
-    await carregarEmpresas();
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/';
+    } else {
+        await carregarValoresFiltros();
+        await carregarEmpresas();
+    }
 });
 
 document.getElementById('buscaEmpresa').addEventListener('keypress', (e) => {
