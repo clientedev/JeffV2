@@ -18,3 +18,4 @@ uvicorn
 xlrd
 cryptography
 cryptography
+groq

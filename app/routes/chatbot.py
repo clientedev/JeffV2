@@ -19,13 +19,13 @@ class ChatResponse(BaseModel):
     resposta: str
     dados: dict = {}
 
-# Tentar importar OpenAI se disponível
+# Tentar importar Groq AI se disponível
 try:
-    from openai import OpenAI
-    OPENAI_DISPONIVEL = True
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    from groq import Groq
+    AI_DISPONIVEL = True
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 except (ImportError, Exception):
-    OPENAI_DISPONIVEL = False
+    AI_DISPONIVEL = False
     client = None
 
 @router.post("/perguntar", response_model=ChatResponse)
@@ -146,8 +146,8 @@ async def chat_perguntar(
         )
     
     else:
-        # Se OpenAI estiver disponível, usar para responder perguntas mais complexas
-        if OPENAI_DISPONIVEL and client and os.getenv("OPENAI_API_KEY"):
+        # Se Groq AI estiver disponível, usar para responder perguntas mais complexas
+        if AI_DISPONIVEL and client and os.getenv("GROQ_API_KEY"):
             try:
                 # Coletar contexto do banco de dados
                 total_propostas = db.query(Proposta).count()
@@ -155,7 +155,7 @@ async def chat_perguntar(
                 total_consultores = db.query(Consultor).count()
                 
                 contexto = f"""
-                Você é um assistente de um sistema de gestão industrial. 
+                Você é um assistente de um sistema de gestão industrial chamado "Núcleo de Tecnologia". 
                 O sistema atualmente possui:
                 - {total_propostas} propostas cadastradas
                 - {total_empresas} empresas
@@ -168,12 +168,12 @@ async def chat_perguntar(
                 """
                 
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="llama3-70b-8192",
                     messages=[
-                        {"role": "system", "content": "Você é um assistente útil para um sistema de gestão industrial."},
+                        {"role": "system", "content": "Você é um assistente útil e prestativo para um sistema de gestão industrial brasileiro. Responda sempre em português brasileiro de forma clara e profissional."},
                         {"role": "user", "content": contexto}
                     ],
-                    max_tokens=500,
+                    max_tokens=1000,
                     temperature=0.7
                 )
                 
@@ -188,7 +188,7 @@ async def chat_perguntar(
                     }
                 )
             except Exception as e:
-                print(f"Erro ao consultar OpenAI: {e}")
+                print(f"Erro ao consultar Groq AI: {e}")
                 # Fallback para resposta padrão
                 pass
         
