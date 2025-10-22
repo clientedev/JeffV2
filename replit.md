@@ -15,6 +15,7 @@ Sistema web completo de gerenciamento de relacionamento com empresas, desenvolvi
 - **993 empresas** cadastradas
 - **20 consultores** ativos
 - **3.003 contatos** de empresas
+- **2.097 contatos de email** para automações (NOVO!)
 - **2.940 registros** de linha tecnologia
 - **266 registros** de linha educacional
 - **4.967 alocações** de cronograma
