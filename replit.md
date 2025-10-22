@@ -1,4 +1,4 @@
-# Sistema de Relacionamento com a Indústria 1.03
+# Núcleo de Tecnologia 1.03
 
 Sistema web completo de gerenciamento de relacionamento com empresas, desenvolvido em FastAPI + PostgreSQL.
 
@@ -251,9 +251,11 @@ Veja `RAILWAY_SETUP.md` para instruções completas de deploy no Railway.
 
 ## 📞 Contato
 
-Sistema desenvolvido para gestão de relacionamento industrial v1.03
+Sistema desenvolvido pelo Núcleo de Tecnologia v1.03
 
 ---
 
-**Última atualização:** 22/10/2025
-**Status:** ✅ Totalmente funcional com pipeline kanban, prospecção e automações de email
+**Última atualização:** 22/10/2025  
+**Status:** ✅ Totalmente funcional com pipeline kanban, prospecção e automações de email  
+**Branding:** Núcleo de Tecnologia 1.03 com ícone tecnológico (microchip)  
+**Nova página de contatos:** Reformatada com estatísticas, paginação e melhor UX

@@ -13,7 +13,7 @@ from app.routes import auth, empresas, consultores, propostas, cronogramas, cont
 from app.routes import prospeccao as prospeccao_routes
 
 app = FastAPI(
-    title="Sistema de relacionamento com a industria",
+    title="Núcleo de Tecnologia",
     version="1.03"
 )
 
@@ -162,4 +162,4 @@ async def nova_campanha_page(request: Request):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "message": "Sistema de relacionamento com a industria 1.03 rodando"}
+    return {"status": "ok", "message": "Núcleo de Tecnologia 1.03 rodando"}

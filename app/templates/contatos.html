@@ -1,81 +1,243 @@
 {% extends "base.html" %}
 
-{% block title %}Contatos - Sistema de Relacionamento{% endblock %}
+{% block title %}Contatos - Núcleo de Tecnologia 1.03{% endblock %}
 
 {% block content %}
+<style>
+.stats-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.stats-card h3 {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--accent-primary);
+    margin: 0;
+}
+
+.stats-card p {
+    color: var(--text-secondary);
+    margin: 5px 0 0 0;
+    font-size: 14px;
+}
+
+.filter-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 15px;
+    align-items: end;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.table-container {
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.table thead th {
+    background: var(--bg-darker);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    padding: 16px 12px;
+    border: none;
+}
+
+.table tbody td {
+    padding: 14px 12px;
+    vertical-align: middle;
+    border-color: var(--border-color);
+}
+
+.table tbody tr:hover {
+    background: var(--bg-darker);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-primary {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.pagination-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--bg-darker);
+    border-top: 1px solid var(--border-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+}
+</style>
+
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <h2>Gestão de Contatos</h2>
-            <p class="text-muted">Gerenciar contatos de empresas</p>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Buscar...">
-        </div>
-        <div class="col-md-2">
-            <select id="porteFilter" class="form-select">
-                <option value="">Todos os Portes</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select id="erFilter" class="form-select">
-                <option value="">Todas as ERs</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select id="carteiraFilter" class="form-select">
-                <option value="">Todas as Carteiras</option>
-            </select>
-        </div>
-        <div class="col-md-3 text-end">
-            <button class="btn btn-success" onclick="novoContato()">
-                <i class="bi bi-plus-circle"></i> Novo Contato
-            </button>
-            <div class="btn-group">
-                <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-download"></i> Exportar
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#" onclick="exportarExcel()">
-                        <i class="bi bi-file-earmark-excel"></i> Excel
-                    </a></li>
-                    <li><a class="dropdown-item" href="#" onclick="exportarPDF()">
-                        <i class="bi bi-file-earmark-pdf"></i> PDF
-                    </a></li>
-                </ul>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2><i class="fas fa-address-book"></i> Gestão de Contatos</h2>
+                    <p class="text-muted">Gerencie todos os contatos das empresas</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-success" onclick="novoContato()">
+                        <i class="fas fa-plus-circle"></i> Novo Contato
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarExcel()">
+                                <i class="fas fa-file-excel"></i> Excel
+                            </a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarPDF()">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Empresa</th>
-                                    <th>CNPJ</th>
-                                    <th>Contato</th>
-                                    <th>Cargo</th>
-                                    <th>Telefone</th>
-                                    <th>Email</th>
-                                    <th>ER</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="contatosTableBody">
-                                <tr>
-                                    <td colspan="8" class="text-center">Carregando...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3 id="totalContatos">0</h3>
+                <p>Total de Contatos</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3 id="totalEmpresas">0</h3>
+                <p>Empresas Únicas</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3 id="totalERs">0</h3>
+                <p>ERs Distintas</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3 id="totalCarteiras">0</h3>
+                <p>Carteiras Ativas</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-card">
+        <div class="filter-row">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-search"></i> Buscar</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por empresa, CNPJ, nome...">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-building"></i> Porte</label>
+                <select id="porteFilter" class="form-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-map-marker-alt"></i> ER</label>
+                <select id="erFilter" class="form-select">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-briefcase"></i> Carteira</label>
+                <select id="carteiraFilter" class="form-select">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-building"></i> Empresa</th>
+                        <th><i class="fas fa-id-card"></i> CNPJ</th>
+                        <th><i class="fas fa-user"></i> Contato</th>
+                        <th><i class="fas fa-briefcase"></i> Cargo</th>
+                        <th><i class="fas fa-phone"></i> Telefone</th>
+                        <th><i class="fas fa-envelope"></i> Email</th>
+                        <th><i class="fas fa-map-marker-alt"></i> ER</th>
+                        <th style="width: 120px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="contatosTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center" style="padding: 40px;">
+                            <span class="loading-spinner"></span> Carregando contatos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-info">
+            <div>
+                <span id="paginationText">Mostrando 0 de 0 contatos</span>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-secondary" id="btnPrevPage" onclick="previousPage()" disabled>
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <button class="btn btn-sm btn-secondary" id="btnNextPage" onclick="nextPage()" disabled>
+                    Próxima <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -83,30 +245,33 @@
 
 <!-- Modal Novo/Editar Contato -->
 <div class="modal fade" id="contatoModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Contato</h5>
+                <h5 class="modal-title" id="modalTitle">Novo Contato</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="contatoForm">
                     <input type="hidden" id="contatoId">
+                    
+                    <h6 class="mb-3"><i class="fas fa-building"></i> Dados da Empresa</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Empresa</label>
                             <input type="text" class="form-control" id="empresa">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">CNPJ</label>
                             <input type="text" class="form-control" id="cnpj">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Porte</label>
                             <input type="text" class="form-control" id="porte">
                         </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">ER</label>
                             <input type="text" class="form-control" id="er">
@@ -116,26 +281,33 @@
                             <input type="text" class="form-control" id="carteira">
                         </div>
                     </div>
+                    
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-user"></i> Dados do Contato</h6>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Contato</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Nome do Contato</label>
                             <input type="text" class="form-control" id="contato">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Ponto Focal</label>
                             <input type="text" class="form-control" id="ponto_focal">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Cargo</label>
                             <input type="text" class="form-control" id="cargo">
                         </div>
-                        <div class="col-md-6 mb-3">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Proprietário/Sócio</label>
                             <input type="text" class="form-control" id="proprietario_socio">
                         </div>
                     </div>
+                    
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-phone"></i> Informações de Contato</h6>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Telefone Fixo</label>
@@ -150,29 +322,38 @@
                             <input type="text" class="form-control" id="celular2">
                         </div>
                     </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" class="form-control" id="email">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">E-mails Voltaram</label>
+                            <label class="form-label">Emails Retornados</label>
                             <input type="text" class="form-control" id="emails_voltaram">
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Observações</label>
-                        <textarea class="form-control" id="observacoes" rows="3"></textarea>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" rows="3"></textarea>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Data de Atualização</label>
-                        <input type="date" class="form-control" id="atualizacao">
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Data de Atualização</label>
+                            <input type="date" class="form-control" id="atualizacao">
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarContato()">Salvar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarContato()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
             </div>
         </div>
     </div>
@@ -180,7 +361,10 @@
 
 <script>
 let contatos = [];
+let contatosFiltrados = [];
 let filtros = {};
+let currentPage = 1;
+const itemsPerPage = 50;
 
 async function carregarFiltros() {
     try {
@@ -226,7 +410,7 @@ async function carregarContatos() {
         const er = document.getElementById('erFilter').value;
         const carteira = document.getElementById('carteiraFilter').value;
         
-        let url = '/api/contatos/?limit=1000';
+        let url = '/api/contatos/?limit=10000';
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (porte) url += `&porte=${encodeURIComponent(porte)}`;
         if (er) url += `&er=${encodeURIComponent(er)}`;
@@ -237,45 +421,118 @@ async function carregarContatos() {
         });
         
         contatos = await response.json();
+        contatosFiltrados = contatos;
+        currentPage = 1;
+        
+        atualizarEstatisticas();
         renderizarTabela();
     } catch (error) {
         console.error('Erro ao carregar contatos:', error);
+        const tbody = document.getElementById('contatosTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>Erro ao carregar contatos</div>
+                </td>
+            </tr>
+        `;
     }
+}
+
+function atualizarEstatisticas() {
+    document.getElementById('totalContatos').textContent = contatos.length;
+    
+    const empresasUnicas = new Set(contatos.map(c => c.empresa).filter(e => e));
+    document.getElementById('totalEmpresas').textContent = empresasUnicas.size;
+    
+    const ersUnicas = new Set(contatos.map(c => c.er).filter(e => e));
+    document.getElementById('totalERs').textContent = ersUnicas.size;
+    
+    const carteirasUnicas = new Set(contatos.map(c => c.carteira).filter(c => c));
+    document.getElementById('totalCarteiras').textContent = carteirasUnicas.size;
 }
 
 function renderizarTabela() {
     const tbody = document.getElementById('contatosTableBody');
     
-    if (contatos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum contato encontrado</td></tr>';
+    if (contatosFiltrados.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <div style="margin-top: 10px; font-size: 16px; font-weight: 500;">Nenhum contato encontrado</div>
+                    <div style="margin-top: 5px; font-size: 14px;">Tente ajustar os filtros ou adicionar um novo contato</div>
+                </td>
+            </tr>
+        `;
+        document.getElementById('paginationText').textContent = 'Mostrando 0 de 0 contatos';
+        document.getElementById('btnPrevPage').disabled = true;
+        document.getElementById('btnNextPage').disabled = true;
         return;
     }
     
-    tbody.innerHTML = contatos.map(c => `
+    const inicio = (currentPage - 1) * itemsPerPage;
+    const fim = inicio + itemsPerPage;
+    const contatosPagina = contatosFiltrados.slice(inicio, fim);
+    
+    tbody.innerHTML = contatosPagina.map(c => `
         <tr>
-            <td>${c.empresa || ''}</td>
-            <td>${c.cnpj || ''}</td>
-            <td>${c.contato || ''}</td>
-            <td>${c.cargo || ''}</td>
-            <td>${c.celular || c.telefone_fixo || ''}</td>
-            <td>${c.email || ''}</td>
-            <td>${c.er || ''}</td>
+            <td><strong>${c.empresa || '-'}</strong></td>
+            <td>${formatarCNPJ(c.cnpj) || '-'}</td>
+            <td>${c.contato || '-'}</td>
+            <td>${c.cargo || '-'}</td>
+            <td>${c.celular || c.telefone_fixo || '-'}</td>
+            <td>${c.email ? `<a href="mailto:${c.email}">${c.email}</a>` : '-'}</td>
+            <td>${c.er ? `<span class="badge badge-primary">${c.er}</span>` : '-'}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="editarContato(${c.id})">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deletarContato(${c.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-primary" onclick="editarContato(${c.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deletarContato(${c.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
+    
+    const totalPaginas = Math.ceil(contatosFiltrados.length / itemsPerPage);
+    document.getElementById('paginationText').textContent = 
+        `Mostrando ${inicio + 1} a ${Math.min(fim, contatosFiltrados.length)} de ${contatosFiltrados.length} contatos`;
+    
+    document.getElementById('btnPrevPage').disabled = currentPage === 1;
+    document.getElementById('btnNextPage').disabled = currentPage >= totalPaginas;
+}
+
+function formatarCNPJ(cnpj) {
+    if (!cnpj) return '';
+    cnpj = cnpj.replace(/\D/g, '');
+    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderizarTabela();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function nextPage() {
+    const totalPaginas = Math.ceil(contatosFiltrados.length / itemsPerPage);
+    if (currentPage < totalPaginas) {
+        currentPage++;
+        renderizarTabela();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 function novoContato() {
     document.getElementById('contatoForm').reset();
     document.getElementById('contatoId').value = '';
-    document.querySelector('#contatoModal .modal-title').textContent = 'Novo Contato';
+    document.getElementById('modalTitle').textContent = 'Novo Contato';
     new bootstrap.Modal(document.getElementById('contatoModal')).show();
 }
 
@@ -305,7 +562,7 @@ async function editarContato(id) {
         document.getElementById('observacoes').value = contato.observacoes || '';
         document.getElementById('atualizacao').value = contato.atualizacao || '';
         
-        document.querySelector('#contatoModal .modal-title').textContent = 'Editar Contato';
+        document.getElementById('modalTitle').textContent = 'Editar Contato';
         new bootstrap.Modal(document.getElementById('contatoModal')).show();
     } catch (error) {
         console.error('Erro ao carregar contato:', error);
@@ -384,36 +641,78 @@ async function deletarContato(id) {
     }
 }
 
-function exportarExcel() {
-    const token = localStorage.getItem('access_token');
-    const search = document.getElementById('searchInput').value;
-    const porte = document.getElementById('porteFilter').value;
-    const er = document.getElementById('erFilter').value;
-    const carteira = document.getElementById('carteiraFilter').value;
-    
-    let url = '/api/contatos/exportar/excel?';
-    if (search) url += `search=${encodeURIComponent(search)}&`;
-    if (porte) url += `porte=${encodeURIComponent(porte)}&`;
-    if (er) url += `er=${encodeURIComponent(er)}&`;
-    if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
-    
-    window.location.href = url + `token=${token}`;
+async function exportarExcel() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const search = document.getElementById('searchInput').value;
+        const porte = document.getElementById('porteFilter').value;
+        const er = document.getElementById('erFilter').value;
+        const carteira = document.getElementById('carteiraFilter').value;
+        
+        let url = '/api/contatos/exportar/excel?';
+        if (search) url += `search=${encodeURIComponent(search)}&`;
+        if (porte) url += `porte=${encodeURIComponent(porte)}&`;
+        if (er) url += `er=${encodeURIComponent(er)}&`;
+        if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `contatos_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+        } else {
+            alert('Erro ao exportar Excel');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao exportar Excel');
+    }
 }
 
-function exportarPDF() {
-    const token = localStorage.getItem('access_token');
-    const search = document.getElementById('searchInput').value;
-    const porte = document.getElementById('porteFilter').value;
-    const er = document.getElementById('erFilter').value;
-    const carteira = document.getElementById('carteiraFilter').value;
-    
-    let url = '/api/contatos/exportar/pdf?';
-    if (search) url += `search=${encodeURIComponent(search)}&`;
-    if (porte) url += `porte=${encodeURIComponent(porte)}&`;
-    if (er) url += `er=${encodeURIComponent(er)}&`;
-    if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
-    
-    window.location.href = url + `token=${token}`;
+async function exportarPDF() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const search = document.getElementById('searchInput').value;
+        const porte = document.getElementById('porteFilter').value;
+        const er = document.getElementById('erFilter').value;
+        const carteira = document.getElementById('carteiraFilter').value;
+        
+        let url = '/api/contatos/exportar/pdf?';
+        if (search) url += `search=${encodeURIComponent(search)}&`;
+        if (porte) url += `porte=${encodeURIComponent(porte)}&`;
+        if (er) url += `er=${encodeURIComponent(er)}&`;
+        if (carteira) url += `carteira=${encodeURIComponent(carteira)}&`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `contatos_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+        } else {
+            alert('Erro ao exportar PDF');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao exportar PDF');
+    }
 }
 
 document.getElementById('searchInput').addEventListener('keyup', debounce(carregarContatos, 500));
