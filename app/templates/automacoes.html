@@ -18,7 +18,7 @@
     .page-title {
         font-size: 28px;
         font-weight: 600;
-        color: #1e293b;
+        color: #f1f5f9;
     }
 
     .btn-primary {
@@ -44,7 +44,7 @@
         display: flex;
         gap: 8px;
         margin-bottom: 24px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #334155;
     }
 
     .tab {
@@ -55,7 +55,7 @@
         margin-bottom: -2px;
         cursor: pointer;
         font-weight: 500;
-        color: #64748b;
+        color: #94a3b8;
         transition: all 0.2s;
     }
 
@@ -77,11 +77,12 @@
     }
 
     .card {
-        background: white;
+        background: #1e293b;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         padding: 20px;
         margin-bottom: 16px;
+        border: 1px solid #334155;
     }
 
     .campanhas-grid {
@@ -90,8 +91,8 @@
     }
 
     .campanha-card {
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: #0f172a;
+        border: 1px solid #334155;
         border-radius: 12px;
         padding: 20px;
         transition: all 0.2s;
@@ -100,7 +101,7 @@
 
     .campanha-card:hover {
         border-color: #6366f1;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
     .campanha-header {
@@ -113,13 +114,13 @@
     .campanha-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1e293b;
+        color: #f1f5f9;
         margin-bottom: 4px;
     }
 
     .campanha-subject {
         font-size: 14px;
-        color: #64748b;
+        color: #94a3b8;
     }
 
     .status-badge {
@@ -149,14 +150,14 @@
         gap: 24px;
         margin-top: 16px;
         padding-top: 16px;
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid #334155;
     }
 
     .stat {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #64748b;
+        color: #94a3b8;
         font-size: 14px;
     }
 
@@ -170,24 +171,24 @@
     }
 
     .contatos-table th {
-        background: #f8fafc;
+        background: #0f172a;
         padding: 12px;
         text-align: left;
         font-weight: 600;
-        color: #475569;
+        color: #e2e8f0;
         font-size: 14px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #334155;
     }
 
     .contatos-table td {
         padding: 12px;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #334155;
         font-size: 14px;
-        color: #334155;
+        color: #cbd5e1;
     }
 
     .contatos-table tr:hover {
-        background: #f8fafc;
+        background: #0f172a;
     }
 
     .btn-icon {
@@ -197,17 +198,17 @@
         padding: 6px 12px;
         border-radius: 6px;
         transition: all 0.2s;
-        color: #64748b;
+        color: #94a3b8;
     }
 
     .btn-icon:hover {
-        background: #f1f5f9;
+        background: #334155;
         color: #6366f1;
     }
 
     .btn-icon.danger:hover {
-        background: #fef2f2;
-        color: #dc2626;
+        background: #450a0a;
+        color: #f87171;
     }
 
     .modal {
@@ -228,20 +229,21 @@
     }
 
     .modal-content {
-        background: white;
+        background: #1e293b;
         border-radius: 16px;
         padding: 32px;
         max-width: 500px;
         width: 90%;
         max-height: 90vh;
         overflow-y: auto;
+        border: 1px solid #334155;
     }
 
     .modal-header {
         font-size: 24px;
         font-weight: 600;
         margin-bottom: 24px;
-        color: #1e293b;
+        color: #f1f5f9;
     }
 
     .form-group {
@@ -252,22 +254,24 @@
         display: block;
         margin-bottom: 8px;
         font-weight: 500;
-        color: #475569;
+        color: #cbd5e1;
     }
 
     .form-input {
         width: 100%;
         padding: 10px 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #334155;
         border-radius: 8px;
         font-size: 14px;
         transition: all 0.2s;
+        background: #0f172a;
+        color: #e2e8f0;
     }
 
     .form-input:focus {
         outline: none;
         border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
 
     .form-actions {
@@ -278,8 +282,8 @@
     }
 
     .btn-secondary {
-        background: #f1f5f9;
-        color: #475569;
+        background: #334155;
+        color: #cbd5e1;
         border: none;
         padding: 10px 20px;
         border-radius: 8px;
@@ -289,24 +293,25 @@
     }
 
     .btn-secondary:hover {
-        background: #e2e8f0;
+        background: #475569;
     }
 
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #64748b;
+        color: #94a3b8;
     }
 
     .empty-state i {
         font-size: 48px;
-        color: #cbd5e1;
+        color: #475569;
         margin-bottom: 16px;
     }
 
     .empty-state p {
         font-size: 16px;
         margin-bottom: 20px;
+        color: #94a3b8;
     }
 </style>
 {% endblock %}
@@ -348,7 +353,7 @@
     <div id="contatos-tab" class="tab-content">
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0; color: #1e293b;">Lista de Contatos de Email</h3>
+                <h3 style="margin: 0; color: #f1f5f9;">Lista de Contatos de Email</h3>
                 <button class="btn-primary" onclick="openModal('modalNovoContato')">
                     <i class="fas fa-plus"></i>
                     Novo Contato
@@ -445,7 +450,7 @@ async function carregarCampanhas() {
     try {
         const response = await fetch('/api/automacoes/campanhas', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         });
         
@@ -501,7 +506,7 @@ async function carregarContatos() {
     try {
         const response = await fetch('/api/automacoes/email-contatos', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         });
         
@@ -558,7 +563,7 @@ async function salvarContato(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             },
             body: JSON.stringify(data)
         });
@@ -587,7 +592,7 @@ async function deletarContato(id) {
         const response = await fetch(`/api/automacoes/email-contatos/${id}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
             }
         });
         
