@@ -85,6 +85,10 @@
                         <i class="fas fa-robot"></i>
                         <span>Assistente IA</span>
                     </a>
+                    <a href="/automacoes" class="nav-item {% if request.path == '/automacoes' or request.path == '/nova-campanha' %}active{% endif %}">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <span>Automações Email</span>
+                    </a>
                     <a href="/importacao" class="nav-item {% if request.path == '/importacao' %}active{% endif %}">
                         <i class="fas fa-file-import"></i>
                         <span>Importação</span>

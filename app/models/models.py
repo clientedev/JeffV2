@@ -511,3 +511,69 @@ class Activity(Base):
     criado_em = Column(DateTime, default=datetime.utcnow, index=True)
     
     usuario = relationship("Usuario")
+
+class EmailContato(Base):
+    __tablename__ = "email_contatos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
+    empresa = Column(String(255))
+    cargo = Column(String(100))
+    telefone = Column(String(20))
+    ativo = Column(Boolean, default=True)
+    observacoes = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class CampanhaEmail(Base):
+    __tablename__ = "campanhas_email"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(255), nullable=False, index=True)
+    assunto = Column(String(500), nullable=False)
+    corpo_email = Column(Text, nullable=False)
+    remetente_nome = Column(String(255))
+    remetente_email = Column(String(255))
+    status = Column(String(50), default='Rascunho')
+    data_agendamento = Column(DateTime)
+    data_envio = Column(DateTime)
+    total_destinatarios = Column(Integer, default=0)
+    total_enviados = Column(Integer, default=0)
+    total_falhas = Column(Integer, default=0)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    usuario = relationship("Usuario")
+    destinatarios = relationship("CampanhaDestinatario", back_populates="campanha", cascade="all, delete-orphan")
+    anexos = relationship("AnexoEmail", back_populates="campanha", cascade="all, delete-orphan")
+
+class CampanhaDestinatario(Base):
+    __tablename__ = "campanha_destinatarios"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    campanha_id = Column(Integer, ForeignKey("campanhas_email.id"), nullable=False, index=True)
+    email_contato_id = Column(Integer, ForeignKey("email_contatos.id"))
+    email = Column(String(255), nullable=False)
+    nome = Column(String(255))
+    status_envio = Column(String(50), default='Pendente')
+    data_envio = Column(DateTime)
+    mensagem_erro = Column(Text)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    campanha = relationship("CampanhaEmail", back_populates="destinatarios")
+    contato = relationship("EmailContato")
+
+class AnexoEmail(Base):
+    __tablename__ = "anexos_email"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    campanha_id = Column(Integer, ForeignKey("campanhas_email.id"), nullable=False, index=True)
+    nome_arquivo = Column(String(255), nullable=False)
+    tipo_arquivo = Column(String(100))
+    tamanho_bytes = Column(Integer)
+    caminho_arquivo = Column(String(500), nullable=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+    
+    campanha = relationship("CampanhaEmail", back_populates="anexos")

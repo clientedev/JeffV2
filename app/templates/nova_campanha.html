@@ -1,0 +1,624 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Campanha de Email - Sistema{% endblock %}
+
+{% block extra_css %}
+<style>
+    .campanha-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #475569;
+        font-size: 14px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    textarea.form-input {
+        min-height: 200px;
+        resize: vertical;
+    }
+
+    .destinatarios-selector {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .destinatario-item {
+        padding: 12px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background 0.2s;
+    }
+
+    .destinatario-item:hover {
+        background: #f8fafc;
+    }
+
+    .destinatario-item:last-child {
+        border-bottom: none;
+    }
+
+    .destinatario-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .destinatario-info {
+        flex: 1;
+    }
+
+    .destinatario-nome {
+        font-weight: 500;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .destinatario-email {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .selecionados-count {
+        background: #6366f1;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .anexos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .anexo-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .anexo-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .anexo-icon {
+        width: 40px;
+        height: 40px;
+        background: #6366f1;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .anexo-details {
+        flex: 1;
+    }
+
+    .anexo-nome {
+        font-weight: 500;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .anexo-tamanho {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        font-size: 13px;
+    }
+
+    .btn-danger:hover {
+        background: #fee2e2;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #6366f1;
+        border: 1px solid #6366f1;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-outline:hover {
+        background: #f5f3ff;
+    }
+
+    .actions-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 24px;
+        border-top: 2px solid #f1f5f9;
+        margin-top: 32px;
+    }
+
+    .search-box {
+        margin-bottom: 12px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 12px 10px 38px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%2364748b" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 12px center;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    #fileInput {
+        position: absolute;
+        left: -9999px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="campanha-container">
+    <div class="page-header">
+        <h1 class="page-title">Nova Campanha de Email</h1>
+        <p class="page-subtitle">Crie uma campanha de email marketing e envie para seus contatos</p>
+    </div>
+
+    <form id="formCampanha">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-envelope"></i>
+                Informações da Campanha
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Título da Campanha *</label>
+                <input type="text" class="form-input" name="titulo" id="titulo" 
+                       placeholder="Ex: Newsletter Janeiro 2025" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Assunto do Email *</label>
+                <input type="text" class="form-input" name="assunto" id="assunto" 
+                       placeholder="Ex: Novidades e Oportunidades em Tecnologia" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Remetente (Nome)</label>
+                <input type="text" class="form-input" name="remetente_nome" id="remetente_nome" 
+                       placeholder="Ex: SENAI - Equipe de Relacionamento">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Remetente (Email)</label>
+                <input type="email" class="form-input" name="remetente_email" id="remetente_email" 
+                       placeholder="Ex: contato@senai.com.br">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Corpo do Email *</label>
+                <textarea class="form-input" name="corpo_email" id="corpo_email" 
+                          placeholder="Digite o conteúdo do email aqui..." required></textarea>
+                <small style="color: #64748b; font-size: 13px; margin-top: 4px; display: block;">
+                    💡 Dica: Use uma linguagem clara e objetiva. Inclua um call-to-action.
+                </small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-users"></i>
+                Destinatários
+                <span class="selecionados-count" id="countSelecionados">0 selecionados</span>
+            </div>
+
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchContatos" 
+                       placeholder="Buscar por nome, email ou empresa...">
+            </div>
+
+            <div class="destinatarios-selector" id="destinatariosList">
+                <div class="empty-state">
+                    Carregando contatos...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-paperclip"></i>
+                Anexos
+            </div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" multiple>
+                <button type="button" class="btn-outline" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-upload"></i>
+                    Adicionar Anexos
+                </button>
+            </div>
+
+            <div class="anexos-list" id="anexosList" style="margin-top: 16px;">
+            </div>
+        </div>
+
+        <div class="actions-footer">
+            <button type="button" class="btn-secondary" onclick="window.location.href='/automacoes'">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+
+            <div style="display: flex; gap: 12px;">
+                <button type="button" class="btn-secondary" id="btnSalvarRascunho">
+                    <i class="fas fa-save"></i>
+                    Salvar Rascunho
+                </button>
+                <button type="submit" class="btn-primary" id="btnEnviar">
+                    <i class="fas fa-paper-plane"></i>
+                    Preparar para Envio
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let contatosSelecionados = new Set();
+let todosContatos = [];
+let anexosAdicionados = [];
+
+async function carregarContatos() {
+    try {
+        const response = await fetch('/api/automacoes/email-contatos?limit=1000', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        todosContatos = data.contatos || [];
+        renderizarContatos(todosContatos);
+    } catch (error) {
+        console.error('Erro ao carregar contatos:', error);
+        document.getElementById('destinatariosList').innerHTML = `
+            <div class="empty-state">
+                Erro ao carregar contatos
+            </div>
+        `;
+    }
+}
+
+function renderizarContatos(contatos) {
+    const lista = document.getElementById('destinatariosList');
+    
+    if (contatos.length === 0) {
+        lista.innerHTML = `
+            <div class="empty-state">
+                Nenhum contato encontrado
+            </div>
+        `;
+        return;
+    }
+    
+    lista.innerHTML = contatos.map(contato => `
+        <div class="destinatario-item">
+            <input type="checkbox" class="destinatario-checkbox" 
+                   value="${contato.id}" 
+                   onchange="toggleDestinatario(${contato.id})"
+                   ${contatosSelecionados.has(contato.id) ? 'checked' : ''}>
+            <div class="destinatario-info">
+                <div class="destinatario-nome">${contato.nome}</div>
+                <div class="destinatario-email">${contato.email}${contato.empresa ? ` • ${contato.empresa}` : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleDestinatario(id) {
+    if (contatosSelecionados.has(id)) {
+        contatosSelecionados.delete(id);
+    } else {
+        contatosSelecionados.add(id);
+    }
+    atualizarContador();
+}
+
+function atualizarContador() {
+    document.getElementById('countSelecionados').textContent = 
+        `${contatosSelecionados.size} selecionados`;
+}
+
+document.getElementById('searchContatos').addEventListener('input', (e) => {
+    const termo = e.target.value.toLowerCase();
+    const filtrados = todosContatos.filter(contato => 
+        contato.nome.toLowerCase().includes(termo) ||
+        contato.email.toLowerCase().includes(termo) ||
+        (contato.empresa && contato.empresa.toLowerCase().includes(termo))
+    );
+    renderizarContatos(filtrados);
+});
+
+document.getElementById('fileInput').addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+        anexosAdicionados.push(file);
+    });
+    renderizarAnexos();
+    e.target.value = '';
+});
+
+function renderizarAnexos() {
+    const lista = document.getElementById('anexosList');
+    
+    if (anexosAdicionados.length === 0) {
+        lista.innerHTML = '';
+        return;
+    }
+    
+    lista.innerHTML = anexosAdicionados.map((file, index) => `
+        <div class="anexo-item">
+            <div class="anexo-info">
+                <div class="anexo-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="anexo-details">
+                    <div class="anexo-nome">${file.name}</div>
+                    <div class="anexo-tamanho">${formatarTamanho(file.size)}</div>
+                </div>
+            </div>
+            <button type="button" class="btn-danger" onclick="removerAnexo(${index})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removerAnexo(index) {
+    anexosAdicionados.splice(index, 1);
+    renderizarAnexos();
+}
+
+function formatarTamanho(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+document.getElementById('formCampanha').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await salvarCampanha(true);
+});
+
+document.getElementById('btnSalvarRascunho').addEventListener('click', async () => {
+    await salvarCampanha(false);
+});
+
+async function salvarCampanha(enviar = false) {
+    const form = document.getElementById('formCampanha');
+    const formData = new FormData(form);
+    
+    if (contatosSelecionados.size === 0) {
+        alert('Selecione pelo menos um destinatário');
+        return;
+    }
+    
+    const data = {
+        titulo: formData.get('titulo'),
+        assunto: formData.get('assunto'),
+        corpo_email: formData.get('corpo_email'),
+        remetente_nome: formData.get('remetente_nome'),
+        remetente_email: formData.get('remetente_email'),
+        destinatarios_ids: Array.from(contatosSelecionados)
+    };
+    
+    try {
+        const btnEnviar = document.getElementById('btnEnviar');
+        const btnRascunho = document.getElementById('btnSalvarRascunho');
+        btnEnviar.disabled = true;
+        btnRascunho.disabled = true;
+        
+        const response = await fetch('/api/automacoes/campanhas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao criar campanha');
+        }
+        
+        const result = await response.json();
+        const campanhaId = result.id;
+        
+        if (anexosAdicionados.length > 0) {
+            for (const file of anexosAdicionados) {
+                const formDataAnexo = new FormData();
+                formDataAnexo.append('file', file);
+                
+                await fetch(`/api/automacoes/campanhas/${campanhaId}/anexos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formDataAnexo
+                });
+            }
+        }
+        
+        if (enviar) {
+            await fetch(`/api/automacoes/campanhas/${campanhaId}/enviar`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            alert('Campanha criada e marcada para envio!');
+        } else {
+            alert('Campanha salva como rascunho!');
+        }
+        
+        window.location.href = '/automacoes';
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar campanha');
+        btnEnviar.disabled = false;
+        btnRascunho.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarContatos();
+});
+</script>
+{% endblock %}

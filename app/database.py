@@ -58,7 +58,8 @@ def ensure_database_setup():
         'tarefas', 'contratos', 'feriados', 'alocacoes_cronograma',
         'contatos', 'linha_tecnologia', 'linha_educacional',
         'prospeccao', 'followups', 'carteira_grm', 'pesquisas_satisfacao', 'solucoes',
-        'stages', 'company_pipeline', 'company_stage_history', 'notes', 'attachments', 'activities'
+        'stages', 'company_pipeline', 'company_stage_history', 'notes', 'attachments', 'activities',
+        'email_contatos', 'campanhas_email', 'campanha_destinatarios', 'anexos_email'
     ]
     
     missing_tables = [t for t in expected_tables if t not in existing_tables]
