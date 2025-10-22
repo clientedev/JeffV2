@@ -7,7 +7,7 @@ Sistema web completo de gerenciamento de relacionamento com empresas, desenvolvi
 ### ✅ Sistema Totalmente Funcional
 - FastAPI rodando na porta 5000
 - PostgreSQL configurado e populado
-- 23 tabelas criadas automaticamente
+- 27 tabelas criadas automaticamente
 - Dados importados e permanentes
 
 ### 📈 Dados no Sistema
@@ -85,12 +85,21 @@ Sistema web completo de gerenciamento de relacionamento com empresas, desenvolvi
 - Consultas sobre dados do sistema
 - Análises e insights
 
+### 11. Automações de Email (NOVO!)
+- Gestão de contatos de email
+- Criação de campanhas de email marketing
+- Seleção múltipla de destinatários
+- Upload de anexos (PDFs, imagens, documentos)
+- Sistema de envio em massa (requer configuração de provedor)
+- Estatísticas de envio e monitoramento
+- Status de campanhas: Rascunho, Pronta, Enviada
+
 ## 🗄️ Banco de Dados
 
 ### PostgreSQL Local (Replit)
 - Configurado automaticamente
 - Dados preservados entre reinicializações
-- 23 tabelas com relacionamentos
+- 27 tabelas com relacionamentos
 
 ### Railway PostgreSQL
 - Veja o arquivo `RAILWAY_SETUP.md` para instruções completas
@@ -115,8 +124,8 @@ workspace/
 │   ├── main.py                    # Aplicação principal FastAPI
 │   ├── database.py                # Configuração do banco de dados
 │   ├── models/
-│   │   └── models.py              # Modelos SQLAlchemy (23 tabelas)
-│   ├── routes/                    # Rotas da API (17 módulos)
+│   │   └── models.py              # Modelos SQLAlchemy (27 tabelas)
+│   ├── routes/                    # Rotas da API (18 módulos)
 │   │   ├── auth.py               # Autenticação
 │   │   ├── empresas.py           # Gestão de empresas
 │   │   ├── consultores.py        # Gestão de consultores
@@ -125,16 +134,18 @@ workspace/
 │   │   ├── cronogramas.py        # Cronogramas
 │   │   ├── pipeline.py           # Pipeline Kanban
 │   │   ├── prospeccao.py         # Prospecção
+│   │   ├── automacoes.py         # Automações de Email
 │   │   └── ...                   # Outros módulos
 │   ├── static/                    # Arquivos estáticos
 │   │   ├── css/style.css
 │   │   └── js/                   # JavaScript por página
-│   ├── templates/                 # Templates HTML (17 páginas)
+│   ├── templates/                 # Templates HTML (19 páginas)
 │   ├── seed_data.py              # Importação de dados iniciais
 │   └── import_prospeccao_pipeline.py  # Importação pipeline/prospecção
 ├── attached_assets/               # Planilhas Excel de dados
 ├── pyproject.toml                 # Dependências Python
 ├── RAILWAY_SETUP.md              # Guia de setup Railway
+├── AUTOMACOES_EMAIL.md           # Guia de automações de email
 └── replit.md                      # Este arquivo
 ```
 
@@ -201,6 +212,10 @@ O sistema importa automaticamente dados das planilhas em `attached_assets/`:
 21. **notes** - Notas sobre empresas
 22. **attachments** - Anexos de documentos
 23. **activities** - Log de atividades do sistema
+24. **email_contatos** - Contatos para email marketing (NOVO!)
+25. **campanhas_email** - Campanhas de email (NOVO!)
+26. **campanha_destinatarios** - Destinatários das campanhas (NOVO!)
+27. **anexos_email** - Anexos de emails (NOVO!)
 
 ## 🛠️ Manutenção
 
@@ -239,5 +254,5 @@ Sistema desenvolvido para gestão de relacionamento industrial v1.03
 
 ---
 
-**Última atualização:** 21/10/2025
-**Status:** ✅ Totalmente funcional com pipeline kanban e prospecção
+**Última atualização:** 22/10/2025
+**Status:** ✅ Totalmente funcional com pipeline kanban, prospecção e automações de email
