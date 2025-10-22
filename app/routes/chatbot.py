@@ -168,12 +168,12 @@ async def chat_perguntar(
                 """
                 
                 response = client.chat.completions.create(
-                    model="llama3-70b-8192",
+                    model="llama-3.3-70b-versatile",
                     messages=[
                         {"role": "system", "content": "Você é um assistente útil e prestativo para um sistema de gestão industrial brasileiro. Responda sempre em português brasileiro de forma clara e profissional."},
                         {"role": "user", "content": contexto}
                     ],
-                    max_tokens=1000,
+                    max_tokens=2000,
                     temperature=0.7
                 )
                 
